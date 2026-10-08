@@ -30,64 +30,8 @@ export const PULSE = T;
 export const PULSE_E1: Vec = col(T, 0);
 export const PULSE_E2: Vec = col(T, 1);
 
-// ------------------------------------------------------------------ c11-p1 · read the pulse
-
-export const P1_BUOY: Vec = [3, 2];
-export const P1_LAND: Vec = matVec(T, P1_BUOY); // (−1, 1)
-export const p1Won = (marker: readonly number[], tol = 0.05): boolean => near(marker, P1_LAND, tol);
-/** The misconception landings: rows read as landing spots, and entry by entry. */
-export const P1_ROWS: Vec = matVec(transpose(T), P1_BUOY); // (5, −8)
-export const P1_ENTRYWISE: Vec = [P1_BUOY[0] * T[0][0], P1_BUOY[1] * T[1][1]]; // (3, −2)
-
-// ------------------------------------------------------------------ c11-p2 · build a pulse
-
-export const P2_PROBES: Vec[] = [[1, 1], [1, -1]];
-export const P2_TARGETS: Vec[] = [[3, 3], [1, -1]];
-export const P2_ANSWER: Mat = fromCols([[2, 1], [1, 2]]);
-export const p2Won = (M: Mat, tol = 0.05): boolean => P2_PROBES.every((p, i) => near(matVec(M, p), P2_TARGETS[i], tol));
-
-// ------------------------------------------------------------------ c11-p3 · why two arrows fix everything [D]
-
 export const SHEAR: Mat = [[1, 1], [0, 1]];
 export const TURN: Mat = R2; // a quarter turn: columns (0, 1), (−1, 0)
-export const P3_TARGETS: { name: string; M: Mat }[] = [
-  { name: 'the shear', M: SHEAR },
-  { name: 'the quarter turn', M: TURN },
-];
-/** "Everything slides 3 to the right": not a move the bench can make. The origin goes to (3, 0). */
-export const SLIDE: Vec = [3, 0];
-/** The curved warp: (x, y) → (x, y + k x²). Vertical lines stay straight; horizontal lines bend. */
-export const WARP_K = 0.14;
-export const warp = (p: readonly number[]): Vec => [p[0], p[1] + WARP_K * p[0] * p[0]];
-/** The pin marks the slide's evidence when it sits where the origin went. */
-export const slideEvidence = (pin: readonly number[]): boolean => near(pin, SLIDE, 0.35);
-/**
- * The pin marks the warp's evidence when it sits on the image of a horizontal grid line y = c
- * (c a whole number from −4 to 4) where that line is visibly bent (|x| ≥ 0.8).
- */
-export function warpEvidence(pin: readonly number[]): number | null {
-  const [x, y] = pin;
-  if (Math.abs(x) < 0.8 || Math.abs(x) > 5) return null;
-  const c = Math.round(y - WARP_K * x * x);
-  if (Math.abs(c) > 4) return null;
-  return Math.abs(y - (c + WARP_K * x * x)) <= 0.22 ? c : null;
-}
-/** The split of x and where its two parts land under the pulse. */
-export function splitParts(x: readonly number[], M: Mat = T): { e1: Vec; e2: Vec; a1: Vec; a2: Vec; land: Vec } {
-  return { e1: [x[0], 0], e2: [0, x[1]], a1: col(M, 0).map((v) => v * x[0]), a2: col(M, 1).map((v) => v * x[1]), land: matVec(M, [x[0], x[1]]) };
-}
-/** The derivation tiles (Commander): reference order, plus a decoy (entry by entry). */
-export const P3_TILES = [
-  { id: 'split', text: 'Write $\\mathbf x = x_1\\mathbf e_1 + x_2\\mathbf e_2$.', py: 'x = x1*e1 + x2*e2' },
-  { id: 'sum', text: 'The move keeps sums: $T(x_1\\mathbf e_1 + x_2\\mathbf e_2) = T(x_1\\mathbf e_1) + T(x_2\\mathbf e_2)$.', py: 'T(u + w) == T(u) + T(w)' },
-  { id: 'scale', text: 'The move keeps stretches: $T(x_1\\mathbf e_1) = x_1\\,T(\\mathbf e_1)$, and the same for $\\mathbf e_2$.', py: 'T(c*u) == c*T(u)' },
-  { id: 'land', text: 'So $T(\\mathbf x) = x_1\\,T(\\mathbf e_1) + x_2\\,T(\\mathbf e_2)$: the same mix of the two landing spots.', py: 'T(x) == x1*T(e1) + x2*T(e2)' },
-];
-export const P3_DECOYS = [
-  { id: 'entry', text: 'Multiply entry by entry: $T(\\mathbf x) = (x_1 \\cdot 1,\\ x_2 \\cdot (-1))$.', py: 'T(x) == [x1*1, x2*(-1)]' },
-];
-export const P3_ORDER = ['split', 'sum', 'scale', 'land'];
-export const p3TilesRight = (order: readonly string[]): boolean => order.length === P3_ORDER.length && order.every((id, i) => id === P3_ORDER[i]);
 
 // ------------------------------------------------------------------ c11-p4 · the spire numbers
 

@@ -1,10 +1,11 @@
-// Chapter 11: puzzle numbers, win checks (reference wins, misconceptions do not), the honest pulse
+// Chapter 11: games 1–3 answers, puzzle numbers, win checks (reference wins, misconceptions do not), the honest pulse
 // animation, the Law (target survives, near-misses break), the Doubts' predicates, and the matvec
 // build (the reference passes its tests in CPython; each decoy fails one).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import * as L from '../../site/src/singular/content/chapters/c11-transformations/logic.ts';
+import * as G from '../../site/src/singular/content/chapters/c11-transformations/apply-logic.ts';
 import { plan2, framesOf, T3partial, T2partial, smoothAt, stageEnd } from '../../site/src/singular/content/chapters/c11-transformations/honest.ts';
 import { TESTS, buildMatvec, swarmCase } from '../../site/src/singular/content/chapters/c11-transformations/build.ts';
 import { buildLincomb } from '../../site/src/singular/content/chapters/c02-span/build.ts';
@@ -15,48 +16,48 @@ import { T, T3, S_now } from '../../site/src/singular/content/truth.ts';
 
 const close = (a: number, b: number, tol = 1e-9) => assert.ok(Math.abs(a - b) <= tol, `${a} ≉ ${b}`);
 
-test('p1: the buoy from (3, 2) lands on (−1, 1); rows and entry-by-entry do not', () => {
-  assert.ok(veq(L.P1_LAND, [-1, 1]));
-  assert.ok(veq(L.PULSE_E1, [1, 1]) && veq(L.PULSE_E2, [-2, -1]));
-  assert.ok(L.p1Won([-1, 1]));
-  assert.ok(L.p1Won([-1.04, 1], 0.05));
-  assert.ok(!L.p1Won([-1.04, 1], 0.01));
-  assert.ok(veq(L.P1_ROWS, [5, -8]) && !L.p1Won(L.P1_ROWS));
-  assert.ok(veq(L.P1_ENTRYWISE, [3, -2]) && !L.p1Won(L.P1_ENTRYWISE));
-  assert.ok(!L.p1Won(L.P1_BUOY));
-});
-
-test('p2: columns (2, 1) and (1, 2) send (1, 1) to (3, 3) and keep (1, −1); the only answer', () => {
-  assert.ok(L.p2Won(L.P2_ANSWER));
-  assert.ok(meq(L.P2_ANSWER, [[2, 1], [1, 2]]));
-  assert.ok(!L.p2Won([[3, 1], [3, -1]]), 'targets typed in as the columns');
-  assert.ok(!L.p2Won(identity(2)));
-  // unique: two independent probes fix the matrix
-  let n = 0;
-  for (let a = -3; a <= 3; a++) for (let b = -3; b <= 3; b++) for (let c = -3; c <= 3; c++) for (let d = -3; d <= 3; d++) if (L.p2Won([[a, b], [c, d]], 1e-9)) n++;
-  assert.equal(n, 1);
-});
-
-test('p3 [D]: the split reassembles at T x; the targets; the slide and warp evidence', () => {
-  for (const x of [[2, 1], [-3, 2], [1, -1], [3, 3]]) {
-    const s = L.splitParts(x);
-    assert.ok(veq([s.a1[0] + s.a2[0], s.a1[1] + s.a2[1]], matVec(T, x)));
-    assert.ok(veq(s.land, matVec(T, x)));
+test('game 1: A v answers; the rows of A (A transpose v) are caught; reverse rounds have one v', () => {
+  const r3 = G.G1[2];
+  assert.ok(veq(G.g1Answer(r3), [-1, 1]));
+  assert.ok(G.g1Right(r3, [-1, 1]) && !G.g1Right(r3, [5, -8]));
+  assert.ok(G.usedRows(r3, [5, -8]) && !G.usedRows(r3, [3, -2]));
+  assert.ok(veq(G.g1Answer(G.G1[0]), [1, 1]) && veq(G.g1Answer(G.G1[1]), [-2, -1]), 'rounds 1 and 2 are the columns');
+  assert.ok(veq(G.g1Answer(G.G1[6]), [0, 0]), 'round 7 lands on 0');
+  for (const r of G.G1.filter((x) => x.reverse)) {
+    assert.ok(Math.abs(det(r.A)) > 1e-9, 'reverse rounds have one answer');
+    assert.ok(G.g1Right(r, r.v) && !G.g1Right(r, [r.v[0] + 1, r.v[1]]));
   }
-  assert.ok(L.p3TilesRight(L.P3_ORDER));
-  assert.ok(!L.p3TilesRight(['split', 'scale', 'sum', 'land']));
-  assert.ok(!L.p3TilesRight(['split', 'entry', 'scale', 'land']));
-  assert.ok(meq(L.SHEAR, [[1, 1], [0, 1]]) && meq(L.TURN, [[0, -1], [1, 0]]));
-  assert.ok(L.slideEvidence([3, 0]) && L.slideEvidence([3.25, 0]) && !L.slideEvidence([0, 0]) && !L.slideEvidence([-3, -2.5]));
-  // the warp moves no origin but bends horizontal lines
-  assert.ok(veq(L.warp([0, 0]), [0, 0]));
-  const q = L.warp([2.5, 1]);
-  assert.equal(L.warpEvidence(q), 1);
-  assert.equal(L.warpEvidence([0.2, 1]), null, 'too near the middle to see the bend');
-  assert.equal(L.warpEvidence([-3, -2.5]), null, 'the pin start is not on a line');
-  // a bent line: the midpoint of the chord is off the curve
-  const a = L.warp([-2, 1]), b = L.warp([2, 1]), mid = L.warp([0, 1]);
-  assert.ok(Math.abs((a[1] + b[1]) / 2 - mid[1]) > 0.5);
+  // no default (empty boxes) and no "v unchanged" answer passes a forward round
+  for (const r of G.G1.filter((x) => !x.reverse)) assert.ok(!G.g1Right(r, r.v) || meq(r.A, identity(2)));
+});
+
+test('game 2: A = W U⁻¹ meets both equations; typing the targets as columns does not', () => {
+  for (const r of G.G2) {
+    const A = G.g2Answer(r);
+    assert.equal(G.g2Misses(r, A).length, 0);
+    assert.ok(veq(matVec(A, r.u[0]), r.w[0]) && veq(matVec(A, r.u[1]), r.w[1]));
+  }
+  const r5 = G.G2[4];
+  assert.ok(meq(G.g2Answer(r5), [[2, 1], [1, 2]]));
+  assert.ok(G.g2Misses(r5, [[3, 1], [3, -1]]).length > 0, 'targets typed in as the columns');
+  assert.ok(meq(G.g2Answer(G.G2[9]), [[2, 0], [0, 2]]));
+});
+
+test('game 3: matrix rounds match T; the others fail with their evidence', () => {
+  for (const r of G.G3) {
+    if (r.A) { assert.equal(G.g3Mismatch(r, r.A), null); continue; }
+    assert.ok(r.evidence);
+    // no matrix matches T: the identity, the T columns, and the zero matrix all fail
+    const cols = [r.T([1, 0]), r.T([0, 1])];
+    for (const A of [identity(2), [[cols[0][0], cols[1][0]], [cols[0][1], cols[1][1]]], [[0, 0], [0, 0]]]) assert.ok(G.g3Mismatch(r, A));
+    const ev = G.evidencePoint(r);
+    if (r.evidence!.kind === 'origin') assert.ok(!veq(ev.T, [0, 0]));
+    else {
+      const e = r.evidence!;
+      if (e.kind === 'scale') assert.ok(!veq(ev.T, r.T(e.x).map((x) => x * e.k)));
+    }
+  }
+  assert.equal(G.G3.filter((r) => r.A).length, 6);
 });
 
 test('p4: the spire forecast misses, the volume forecast matches (TT4, TT5)', () => {

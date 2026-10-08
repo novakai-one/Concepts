@@ -16,12 +16,11 @@ import { burst, shockwave } from '../../../gfx/fx';
 import { C } from '../../../core/theme';
 import { animate, ease, wait } from '../../../core/tween';
 import { sfx } from '../../../audio/sfx';
-import { h, button, inline } from '../../../ui/ui';
+import { h } from '../../../ui/ui';
 import { identity, matVec, mlerp, type Mat, type Vec } from '../../../math/la';
-import { cleanV, isZero, lineAngle, onLineOf, outcomeOf, parseEntry, signedDeg, type Attempt, type Outcome } from './traj-logic';
+import { cleanV, isZero, lineAngle, onLineOf, outcomeOf, signedDeg, type Attempt, type Outcome } from './traj-logic';
 import { fdeg, fv, tn, tv, tpow } from './traj-text';
 import { S, save } from '../../../core/save';
-import { fmtN, texM } from './logic';
 
 export const COPPER = '#c9844f';
 const Z = { line: 0.01, trail: 0.02, arrow: 0.03, dot: 0.05, ship: 0.15 };
@@ -740,98 +739,8 @@ export class TrajView {
 
 // ------------------------------------------------------------------ dock widgets
 
-/** One typed number with a ± key (phone keypads often have no minus) and Enter to submit. */
-export class NumCell {
-  readonly el: HTMLElement;
-  readonly input: HTMLInputElement;
-  private readonly comma: boolean;
-  constructor(o: { value?: string; aria: string; onEnter?: () => void; cls?: string; placeholder?: string; comma?: boolean; signTitle?: string }) {
-    this.comma = o.comma ?? true;
-    this.input = h('input', {
-      class: `cell tj-cell ${o.cls ?? ''}`, type: 'text', inputmode: 'decimal', autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false',
-      enterkeyhint: 'go', 'aria-label': o.aria, placeholder: o.placeholder ?? '', value: o.value ?? '',
-    }) as HTMLInputElement;
-    this.input.addEventListener('keydown', (e) => {
-      e.stopPropagation();
-      if (e.key === 'Enter') { e.preventDefault(); o.onEnter?.(); }
-    });
-    this.input.addEventListener('input', () => this.input.classList.remove('bad'));
-    this.input.addEventListener('focus', () => this.input.select());
-    const pm = button('±', () => {
-      const t = this.input.value.trim();
-      this.input.value = t.startsWith('-') || t.startsWith('−') ? t.slice(1) : `-${t}`;
-      this.input.classList.remove('bad');
-    }, { cls: 'ghost small tj-pm', title: o.signTitle ?? 'Change the sign' });
-    this.el = h('span', { class: 'tj-num' }, this.input, pm);
-  }
-  /** The typed number, or null (and marked) if it cannot be read. */
-  value(): number | null {
-    const x = parseEntry(this.input.value, { comma: this.comma });
-    this.input.classList.toggle('bad', x === null);
-    return x;
-  }
-  set(x: number | string): void { this.input.value = typeof x === 'number' ? fmtN(x).replace(/−/g, '-') : x; this.input.classList.remove('bad'); }
-  focus(): void { this.input.focus(); }
-  enable(on: boolean): void { this.input.disabled = !on; (this.el.querySelector('button') as HTMLButtonElement).disabled = !on; }
-}
-
-/** A launch vector: v = (x, y), green. */
-export class VecField {
-  readonly el: HTMLElement;
-  readonly x: NumCell;
-  readonly y: NumCell;
-  constructor(o: { value?: Vec | null; label?: string; onEnter?: () => void; aria?: [string, string]; signTitle?: string; column?: boolean }) {
-    // null: both boxes start empty (nothing suggests a direction)
-    const v = o.value === undefined ? [1, 0] : o.value;
-    const txt = (i: number) => (v ? fmtN(v[i]).replace(/−/g, '-') : '');
-    const [ax, ay] = o.aria ?? ['first number of v', 'second number of v'];
-    // one number per box: "1,1" in a part is a whole vector typed in one box, so it is refused, not read as 1.1
-    this.x = new NumCell({ value: txt(0), aria: ax, onEnter: o.onEnter, cls: 'c0', comma: false, signTitle: o.signTitle });
-    this.y = new NumCell({ value: txt(1), aria: ay, onEnter: o.onEnter, cls: 'c0', comma: false, signTitle: o.signTitle });
-    const label = h('span', { class: 'tj-vl', html: inline(o.label ?? '$\\mathbf v =$') });
-    // column (the default): the two boxes stacked inside square brackets, written like the matrix
-    this.el = o.column !== false
-      ? h('span', { class: 'tj-vec' }, label, h('span', { class: 'tj-col' }, this.x.el, this.y.el))
-      : h('span', { class: 'tj-vec' }, label, h('span', { class: 'tj-par' }, '('), this.x.el, h('span', { class: 'tj-par' }, ','), this.y.el, h('span', { class: 'tj-par' }, ')'));
-  }
-  /** Both parts, or null (cells that cannot be read are marked). */
-  get(): Vec | null {
-    const a = this.x.value(), b = this.y.value();
-    return a === null || b === null ? null : [a, b];
-  }
-  set(v: Vec): void { this.x.set(v[0]); this.y.set(v[1]); }
-  enable(on: boolean): void { this.x.enable(on); this.y.enable(on); }
-  focus(): void { this.x.focus(); }
-}
-
-/** The dock: one panel (phones get one scrolling strip above the HUD buttons). */
-export interface TrajDock { root: HTMLElement; head: HTMLElement; body: HTMLElement; msg: (md: string, kind?: '' | 'good' | 'bad' | 'warn') => void; setMatrix: (M: Mat) => void }
-export function trajDock(p: PuzzleCtx, M: Mat, extra?: HTMLElement, name = 'A', o: { matrixLabel?: string; matrixNote?: string } = {}): TrajDock {
-  const dock = p.dock();
-  dock.classList.add('tj-dock');
-  const mat = h('span', { class: 'tj-mat' });
-  const setMatrix = (A: Mat) => { mat.innerHTML = inline(`${o.matrixLabel ? `${o.matrixLabel} ` : ''}$${name} = ${texM(A)}$`); };
-  setMatrix(M);
-  const head = h('div', { class: 'tj-head' }, mat, extra ?? null);
-  const note = o.matrixNote ? h('div', { class: 'tj-aside', html: inline(o.matrixNote) }) : null;
-  const body = h('div', { class: 'tj-body' });
-  const m = h('div', { class: 'tj-msg', 'aria-live': 'polite' });
-  const root = h('div', { class: 'tj' }, head, note, body, m);
-  dock.replaceChildren(root);
-  const msg = (md: string, kind: '' | 'good' | 'bad' | 'warn' = '') => {
-    m.className = `tj-msg ${kind}`;
-    m.innerHTML = md ? inline(md) : '';
-    // on phones the dock scrolls: keep the newest feedback in view
-    if (md) requestAnimationFrame(() => m.scrollIntoView({ block: 'nearest' }));
-  };
-  return { root, head, body, msg, setMatrix };
-}
-
-/** Hide the runner's hint box (the stage it answered is over). */
-export function hideHint(p: PuzzleCtx): void {
-  const b = p.g.ui.scene.querySelector<HTMLElement>('.hint-box');
-  if (b) b.hidden = true;
-}
+// NumCell, VecField and the dock live in kit/typed.ts (shared with every rebuilt chapter).
+export { NumCell, VecField, hideHint, typedDock as trajDock, type TypedDock as TrajDock } from '../../../kit/typed';
 
 /** The result line: A v = w, and whether it stayed on its line. */
 export function resultLine(v: Vec, w: Vec, kept: boolean, _deg = 0, name = 'A'): string {
