@@ -1,14 +1,15 @@
-// Chapter 2 builds (GDD §5.5): lincomb (uses scale and add from Chapter 1) and reachable, a brute-force
-// dial search that Chapter 10 replaces with solve.
+// Chapter 2 builds (GDD §5.5): lincomb (uses scale and add from Chapter 1), the chapter's build.
+// reachable (a brute-force search for the weights) is no longer a beat of this chapter; it stays exported
+// because other chapters' tests import it. Chapter 10 builds reachable on solve.
 import type { BuildDef } from '../../../game/types';
 import { lincombCrew, reachableCrew } from './logic.ts';
 
 const LINCOMB = 'def lincomb(cs, vs):\n    """Return the linear combination cs[0]*vs[0] + cs[1]*vs[1] + ..."""\n    total = scale(0, vs[0])\n    for c, v in zip(cs, vs):\n        total = add(total, scale(c, v))\n    return total\n';
 
 export const buildLincomb: BuildDef = {
-  id: 'c02-lincomb', fn: 'lincomb', title: 'Stretch each arrow, then add',
-  brief: 'Write `lincomb(cs, vs)`. `vs` is a list of arrows and `cs` a list of weights, one per arrow. Return `cs[0]*vs[0] + cs[1]*vs[1] + …`: stretch each arrow by its weight with your `scale`, then add them up with your `add`.\n\nStart from the zero vector with as many parts as the arrows: `scale(0, vs[0])`.',
-  starter: 'def lincomb(cs, vs):\n    """Return the linear combination cs[0]*vs[0] + cs[1]*vs[1] + ..."""\n    total = scale(0, vs[0])   # the zero vector, as long as the arrows\n    # for each weight and its arrow: stretch the arrow, add it to total\n    return total\n',
+  id: 'c02-lincomb', fn: 'lincomb', title: 'Multiply each vector by its weight, then add',
+  brief: 'Write `lincomb(cs, vs)`. `vs` is a list of vectors and `cs` a list of weights, one per vector. Return the linear combination `cs[0]*vs[0] + cs[1]*vs[1] + …`: multiply each vector by its weight with your `scale`, then add them up with your `add`.\n\nStart from the zero vector with as many parts as the vectors: `scale(0, vs[0])`.',
+  starter: 'def lincomb(cs, vs):\n    """Return the linear combination cs[0]*vs[0] + cs[1]*vs[1] + ..."""\n    total = scale(0, vs[0])   # the zero vector, as long as the vectors\n    # for each weight and its vector: multiply, then add to total\n    return total\n',
   fill: LINCOMB.replace('    total = scale(0, vs[0])', '    total = ___').replace('add(total, scale(c, v))', 'add(total, ___)'),
   solution: LINCOMB,
   assemble: {
@@ -17,11 +18,11 @@ export const buildLincomb: BuildDef = {
   },
   uses: ['scale', 'add'],
   tests: [
-    { name: '`lincomb([2, 1], [[2, 1], [1, 3]])` lands on the first beacon, `[5, 5]`', args: [[2, 1], [[2, 1], [1, 3]]], expect: [5, 5] },
+    { name: '`lincomb([2, 1], [[2, 1], [1, 3]])` is `[5, 5]`', args: [[2, 1], [[2, 1], [1, 3]]], expect: [5, 5] },
     { name: 'a negative weight: `lincomb([-1, 2], [[2, 1], [1, 3]])` is `[0, 5]`', args: [[-1, 2], [[2, 1], [1, 3]]], expect: [0, 5] },
     { name: 'in 3-D: `lincomb([2, 3], [[1, 0, 1], [0, 1, 1]])` is `[2, 3, 5]`', args: [[2, 3], [[1, 0, 1], [0, 1, 1]]], expect: [2, 3, 5] },
     { name: 'all weights zero give the zero vector', args: [[0, 0], [[2, 1], [1, 3]]], expect: [0, 0] },
-    { name: 'three arrows: `lincomb([2, 3, -1], [[1, 0, 2], [0, 1, 1], [2, 3, 7]])` is `[0, 0, 0]`', args: [[2, 3, -1], [[1, 0, 2], [0, 1, 1], [2, 3, 7]]], expect: [0, 0, 0] },
+    { name: 'three vectors: `lincomb([2, 3, -1], [[1, 0, 2], [0, 1, 1], [2, 3, 7]])` is `[0, 0, 0]`', args: [[2, 3, -1], [[1, 0, 2], [0, 1, 1], [2, 3, 7]]], expect: [0, 0, 0] },
   ],
   swarm: {
     gen: (r, d) => {
@@ -31,9 +32,8 @@ export const buildLincomb: BuildDef = {
     },
     crew: (...a: unknown[]) => lincombCrew(a[0] as number[], a[1] as number[][]),
   },
-  docPrompt: 'What question does `lincomb` answer, and why does stretching then adding give the landing point? Write it the way you would tell Bram.',
-  ilseNote: 'lincomb: where a set of thrusters, fired by these amounts, puts the ship. Stretch each arrow, add the stretches. Every later routine that moves points is built on this one.',
-  payoff: 'LANTERN’s dial planner adds up the thrusters with your `lincomb` from now on.',
+  docPrompt: 'What does `lincomb` return? Say it in your own words.',
+  ilseNote: 'lincomb: the linear combination of the vectors with these weights. Multiply each vector by its weight, add the results. A matrix times a vector is built on this one.',
 };
 
 const REACHABLE = 'def reachable(v, w, target):\n    """Brute force: dials -10..10, steps 0.1. Return [a, b] within 0.05 of target, or None."""\n    for i in range(-100, 101):\n        a = i / 10\n        for j in range(-100, 101):\n            b = j / 10\n            if all(abs(a * v[k] + b * w[k] - target[k]) <= 0.05 for k in range(len(target))):\n                return [a, b]\n    return None\n';
