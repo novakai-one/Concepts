@@ -1,0 +1,22 @@
+/* Chapter 2 only (c02- prefix: all chapter CSS is global). */
+
+/* w is red on the chart (the kit has green and blue only) */
+.g-label.a7-tag.c02-r { color: var(--w); border-color: rgba(255, 92, 108, 0.5); }
+
+/* the equation with its boxes: keep the pieces close */
+.c02-eq { gap: 6px; }
+/* a row that has been answered steps back */
+.c02-eq.c02-done { opacity: 0.5; }
+
+/* by hand: the two row equations under the vector equation, lit one at a time */
+.c02-rows { display: flex; flex-direction: column; gap: 4px; padding-left: 2px; }
+.c02-rowq { opacity: 0; transition: opacity 0.45s ease; font-size: 14.5px; }
+.c02-rowq.on { opacity: 1; }
+.c02-rowq .k { color: var(--ink); transition: color 0.45s ease; }
+.c02-rowq.lit .k { color: var(--result); }
+
+/* phone: a v + b w = t on one line, ± buttons included */
+@media (max-width: 760px) {
+  .c02-eq { gap: 4px; }
+  .c02-eq .cell.tj-cell.m { width: 50px; }
+}
