@@ -1,0 +1,92 @@
+/* Plain maths kit: the dock, the calm screen and the chart labels, with Chapter 18's class names (tj-, a7-tag),
+   so a kit chapter looks exactly like Chapter 18. Every tj-/a7- rule below is a VERBATIM copy of
+   c18-eigen/traj.css or act7.css: all chapter CSS is global, so a changed copy would restyle Chapter 18 too.
+   Kit-only rules use the pk- prefix. */
+
+/* ---------- copied from act7.css: the label base */
+.g-label.a7-tag { font-family: var(--mono); font-size: 12.5px; font-weight: 600; color: var(--ink); padding: 1px 7px; border-radius: 999px; background: rgba(6, 10, 22, 0.76); border: 1px solid rgba(232, 241, 255, 0.22); white-space: nowrap; }
+.g-label.a7-tag.y { color: var(--result); border-color: rgba(255, 209, 102, 0.45); }
+.g-label.a7-tag.g { color: var(--v); border-color: rgba(61, 220, 132, 0.45); }
+.g-label.a7-tag.b { color: var(--u); border-color: rgba(77, 163, 255, 0.5); }
+.g-label.a7-tag.o { color: var(--orange); border-color: rgba(255, 159, 67, 0.5); }
+
+/* ---------- copied from traj.css: the dock */
+.dock.tj-dock { gap: 0; width: min(470px, calc(100vw - 40px)); max-height: calc(100vh - 210px); overflow-y: auto; }
+.tj { display: flex; flex-direction: column; gap: 9px; }
+.tj-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: 13px; color: var(--ink-2); }
+.tj-mat { font-size: 14px; color: var(--ink); }
+.tj-mat .katex { font-size: 1.02em; }
+.tj-body { display: flex; flex-direction: column; gap: 9px; }
+.tj-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 14px; }
+.tj-row .k { color: var(--ink-2); }
+.tj-vec { display: inline-flex; align-items: center; gap: 4px; font-family: var(--mono); }
+.tj-vl { color: var(--v); margin-right: 2px; font-family: var(--font); }
+.tj-aside { font-size: 12.5px; color: var(--ink-2); line-height: 1.35; }
+.tj-col { position: relative; display: inline-flex; flex-direction: column; gap: 4px; padding: 3px 7px; }
+.tj-col::before, .tj-col::after { content: ''; position: absolute; top: 0; bottom: 0; width: 5px; border: 1.5px solid var(--ink-2); }
+.tj-col::before { left: 0; border-right: none; }
+.tj-col::after { right: 0; border-left: none; }
+.tj-num { display: inline-flex; align-items: center; gap: 2px; }
+.cell.tj-cell { width: 56px; height: 38px; }
+.cell.tj-cell.m { color: var(--result); width: 64px; }
+.btn.tj-pm { min-width: 26px; height: 30px; padding: 0 5px; font-family: var(--mono); }
+.tj-res { font-size: 14px; color: var(--ink); min-height: 20px; }
+.tj-msg { font-size: 13.5px; line-height: 1.5; color: var(--ink-2); min-height: 20px; }
+.tj-msg.good { color: var(--good); }
+.tj-msg.bad { color: #ffb347; }
+.tj-msg.warn { color: #ffb347; }
+.tj-q { display: flex; flex-direction: column; gap: 7px; padding: 9px 11px; border-radius: 10px; border: 1px solid rgba(201, 132, 79, 0.55); background: rgba(201, 132, 79, 0.08); }
+.tj-q .t { font-size: 14px; color: var(--ink); }
+.tj-q.ok { border-color: rgba(61, 220, 132, 0.5); background: rgba(61, 220, 132, 0.06); }
+.tj-lines { display: flex; gap: 6px; flex-wrap: wrap; }
+.tj-lines:empty { display: none; }
+.tj-chip { font-family: var(--mono); font-size: 12.5px; padding: 2px 9px; border-radius: 999px; border: 1px solid rgba(201, 132, 79, 0.65); color: #e8ab7a; background: rgba(201, 132, 79, 0.08); }
+.tj-kick { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.tj-log { display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; font-size: 13px; }
+.tj-log .n { color: var(--ink-2); }
+.tj-log .independent { color: var(--good); }
+.tj-log .corrected { color: var(--accent); }
+.tj-log .assisted { color: #ffb347; }
+.tj-sum { font-size: 13.5px; line-height: 1.5; color: var(--ink); }
+.g-label.a7-tag.tj-copper { color: #f0b481; border-color: rgba(201, 132, 79, 0.6); }
+.g-label.a7-tag.tj-ghost { color: var(--ink); border-style: dashed; }
+@media (max-width: 760px) {
+  .dock.tj-dock { left: 8px; right: 8px; bottom: 52px; width: auto; max-width: none; max-height: 44vh; padding: 10px 12px; }
+  .cell.tj-cell { width: 46px; height: 36px; }
+  .btn.tj-pm { min-width: 24px; padding: 0 4px; }
+  body:has(.tj-dock) .hud-chapter { display: none; }
+  body:has(.tj-dock) .hud-tl { top: 54px; max-width: calc(100vw - 24px); }
+  body:has(.tj-dock) .objective { padding: 8px 12px; }
+  body:has(.tj-dock) .objective .goal { font-size: 13.5px; line-height: 1.4; }
+  body:has(.tj-dock) .objective .subgoals { display: none; }
+  .tj { gap: 7px; }
+  .tj-msg { font-size: 13px; }
+  .l-scene:has(.tj-dock) .hint-box, body:has(.tj-dock) .hint-box { left: 8px; right: 8px; width: auto; top: auto; bottom: calc(52px + var(--tj-dock-h, 44vh) + 8px); transform: none; max-height: 30vh; overflow-y: auto; }
+}
+.g-label.a7-tag:has(.katex .mtable) { border-radius: 8px; padding: 3px 8px; display: inline-flex; align-items: center; gap: 4px; }
+@media (min-width: 801px) { .l-scene:has(.tj-dock) .hint-box { left: calc(20px + min(470px, 100vw - 40px) + 14px); top: auto; bottom: 20px; transform: none; } }
+.tj-chip:has(.mtable) { border-radius: 8px; padding: 3px 9px; }
+/* calm screen: fixed help behind "?", one action at a time, few and quiet chart labels */
+.tj-qbtn { display: none; }
+.calm .tj-qbtn { display: inline-flex; width: 26px; height: 26px; padding: 0; justify-content: center; }
+.calm .tj-more .tj-qbtn { border-color: var(--accent); color: var(--accent); }
+.calm .tj:not(.tj-more) .tj-aside, .calm .tj:not(.tj-more) .tj-help, .calm .tj-res { display: none; }
+.calm .tj-asking .tj-body > .tj-row:first-child { display: none; }
+.calm .dock.tj-dock { width: min(400px, calc(100vw - 40px)); }
+.calm .tj-msg:empty { display: none; }
+.calm .g-label.a7-tag.o, .calm .g-label.tj-ghost { display: none !important; }
+.calm .g-label.a7-tag.g, .calm .g-label.a7-tag.y, .calm .g-label.tj-copper { background: none; border: none; text-shadow: 0 0 3px #000, 0 0 8px #000, 0 0 14px #000; }
+.tj-goal { font-size: 14px; line-height: 1.45; color: var(--ink); }
+@media (pointer: fine) { .btn.tj-pm { display: none; } }
+
+/* ---------- kit-only (pk-) */
+/* every kit chart label is quiet on a calm screen, whatever its colour */
+.calm .g-label.a7-tag.pk-tag { background: none; border: none; text-shadow: 0 0 3px #000, 0 0 8px #000, 0 0 14px #000; }
+.g-label.a7-tag.pk-w { color: var(--ink); }
+/* the numbers along the legs of a length */
+.g-label.pk-leg { font-family: var(--mono); font-size: 12px; color: var(--ink-2); text-shadow: 0 0 3px #000, 0 0 8px #000; white-space: nowrap; }
+/* the second typed vector: its own label colour in the dock */
+.tj-vl.pk-b { color: var(--u); }
+.tj-vl.pk-y { color: var(--result); }
+/* the box of a one-box equation holds the unknown: yellow, like the result it gives */
+.pk-eq .tj-col .cell.tj-cell { color: var(--result); }
