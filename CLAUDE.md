@@ -23,6 +23,10 @@ The repository is **public**, and merging to `main` publishes the live site.
   - Long instructions.
   - Clutter: extra panels, boxes, buttons and repeated text.
 - **Less is more.** Cut words before adding them.
+- **If you are a helper agent:** your usual defaults are wrong here.
+  - Do not write tests or optimise for them. Open the screen and look.
+  - Do not write complete explanations. One short sentence beats three.
+  - Do not invent phrasing. Use the words a textbook uses.
 
 ## 2. How the maths is written
 

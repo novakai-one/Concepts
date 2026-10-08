@@ -133,11 +133,11 @@
 .seg { display: flex; gap: 6px; }
 
 /* ---------- chapter map ---------- */
-.map-grid { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(250px, 1fr); gap: 16px; overflow-x: auto; padding-bottom: 8px; }
-.map-grid.searching { grid-auto-flow: row; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); overflow-x: visible; }
-.map-act { display: flex; flex-direction: column; gap: 8px; }
+.map-grid { display: flex; flex-direction: column; gap: 26px; }
+.map-act-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin-bottom: 10px; }
 .map-act-title { font-family: var(--display); margin: 0; font-size: 20px; }
-.map-act-sub { font-size: 13px; margin-bottom: 4px; }
+.map-act-sub { font-size: 14px; }
+.map-act-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; align-items: start; }
 .map-ch { border: 1px solid var(--line); border-radius: 12px; background: rgba(10, 18, 36, 0.6); overflow: hidden; }
 .map-ch.done { border-color: rgba(61, 220, 132, 0.35); }
 .map-ch-main { display: grid; grid-template-columns: 28px 1fr; gap: 2px 8px; width: 100%; text-align: left; padding: 10px 12px; background: none; border: 0; cursor: pointer; color: var(--ink); }
