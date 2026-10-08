@@ -1,0 +1,11 @@
+/* Prologue (c00): chapter-only rules. All chapter CSS is global, so every rule here has the c00- prefix. */
+
+/* the nine numbers as a bracketed matrix */
+.cine-numbers.c00-mat .grid { position: relative; border: none; border-radius: 0; }
+.cine-numbers.c00-mat .grid::before, .cine-numbers.c00-mat .grid::after { content: ''; position: absolute; top: 0; bottom: 0; width: 9px; border: 2px solid var(--ink-2); }
+.cine-numbers.c00-mat .grid::before { left: 0; border-right: none; }
+.cine-numbers.c00-mat .grid::after { right: 0; border-left: none; }
+
+/* the shown entry of a vector with one box: the size of a box, no frame */
+.c00-fix { display: inline-flex; align-items: center; justify-content: center; align-self: flex-start; width: 56px; height: 38px; color: var(--result); font-size: 15px; }
+@media (max-width: 760px) { .c00-fix { width: 46px; height: 36px; } }
