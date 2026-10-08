@@ -11,15 +11,15 @@ export const head = (M: Mat): string => `$A = ${tm(M)}$`;
 
 export const HELP = 'Green: a point before $A$. Yellow: where $A$ moves it.\n\nDecimals ($0.5$) and fractions ($1/2$) work.';
 
-/** A wrong answer: the two steps it makes, side by side. */
+/** A wrong answer: the two steps it makes, side by side. Each equation in braces, so it never breaks inside. */
 export function wrongSteps(q: Question, g: Vec): string {
   const st = stepsOf(q, g);
-  if (st.kind === 'between') return `$${tv(g)} - ${tv(st.lo)} = ${tv(st.a)}$, but $${tv(st.hi)} - ${tv(g)} = ${tv(st.b)}.$`;
+  if (st.kind === 'between') return `$\{${tv(g)} - ${tv(st.lo)} = ${tv(st.a)}\}$, but $\{${tv(st.hi)} - ${tv(g)} = ${tv(st.b)}\}.$`;
   const known = st.kind === 'ahead' ? `${tv(st.from)} - ${tv(st.prev)}` : `${tv(st.prev)} - ${tv(st.from)}`;
   const mine = st.kind === 'ahead' ? `${tv(g)} - ${tv(st.from)}` : `${tv(st.from)} - ${tv(g)}`;
-  // the full stop inside the TeX, so it never wraps onto a line of its own
-  const end = st.k !== 1 ? `$, $\\text{not } ${tmul(st.k, st.s)}.$` : '.$';
-  return `$${known} = ${tv(st.s)}$, but $${mine} = ${tv(st.d)}${end}`;
+  // more than one step: only the guess's step, against the steps it should be (the yellow arrow shows one step)
+  if (st.k !== 1) return `$\{${mine} = ${tv(st.d)}\}$, $\\text{not } ${tmul(st.k, st.s)}.$`;
+  return `$\{${known} = ${tv(st.s)}\}$, but $\{${mine} = ${tv(st.d)}\}.$`;
 }
 
 /** A right answer: the equation, then two or three words. */
@@ -38,9 +38,7 @@ export function hintsFor(q: Question): string[] {
     return [`The answer is halfway between $${tv(st.lo)}$ and $${tv(st.hi)}$.`, `$${tv(st.lo)} + ${tv(st.a)} = ${tv(ans)}$.`];
   }
   const two = st.k !== 1 ? `${tmul(st.k, st.s)}` : tv(st.s);
-  return st.kind === 'ahead'
-    ? [`Each step is $${tv(st.s)}$.`, `$${tv(st.from)} + ${two} = ${tv(ans)}$.`]
-    : [`Each step is $${tv(st.s)}$. Step back.`, `$${tv(st.from)} - ${two} = ${tv(ans)}$.`];
+  return [`Each step is $${tv(st.s)}$.`, `$${tv(st.from)} ${st.kind === 'ahead' ? '+' : '-'} ${two} = ${tv(ans)}$.`];
 }
 
 /** The given points of a practice round, as equations. */
@@ -52,7 +50,7 @@ export const givens = (q: Question): string => {
 // ------------------------------------------------------------------ the first puzzle
 
 export const P1 = {
-  title: 'What does A do?',
+  title: 'What does the matrix do?',
   goal: 'Press **Apply $A$** and watch the points. Then fill in the box.',
   subgoals: ['First row of points', 'Second row of points', 'The origin'],
   apply: 'Apply $A$',
@@ -86,7 +84,7 @@ export const CLOSE = {
   title: 'What $A$ does',
   body: [
     '- Straight lines stay straight.',
-    '- Equal steps stay equal: ${A(\\mathbf p + t\\mathbf s) = A\\mathbf p + t\\,A\\mathbf s}$ for a start $\\mathbf p$ and a step $\\mathbf s.$',
+    '- Equal steps stay equal steps.',
     '- The origin stays: $A\\mathbf 0 = \\mathbf 0.$',
     '',
     '**Still open:** what do the numbers in $A$ mean?',

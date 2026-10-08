@@ -41,7 +41,7 @@ const ch: ChapterDef = {
           pin('nine', 'What do the numbers in $A$ mean?', 'c00');
           pin('linear', 'Why does the origin never move?', 'c00');
           pin('light', 'What is the light at the origin?', 'c00');
-          await rowsVisual(g);
+          await rowsVisual(g, { rows: false });
         },
       },
     },

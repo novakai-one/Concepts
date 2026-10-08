@@ -103,7 +103,7 @@ export const p1: PuzzleDef = {
       try {
         const { q, box } = STEPS[i];
         d.body.querySelector('button')?.setAttribute('disabled', '');
-        await ch.apply(A, { path: pulsePath, ms: 1700, flash: true });
+        await ch.apply(A, { path: pulsePath, ms: 1700, flash: true, keep: true });
         if (p.won) return;
         ch.ask(askP(q));
         phase = 'ask';

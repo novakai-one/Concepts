@@ -35,6 +35,8 @@ export class MoveChart {
   private path: Path = () => I;
   private pts: Pt[] = [];
   private extra: Pt | null = null;
+  /** Faint green dots left where the points started (apply with keep). */
+  private starts: Dot[] = [];
   private readonly line: FatLine;
   private gen = 0;
 
@@ -56,6 +58,7 @@ export class MoveChart {
   private rescale(): void {
     const ppu = this.view.ppu;
     for (const q of this.all()) q.dot.object.scale.setScalar(60 / ppu);
+    for (const d of this.starts) d.object.scale.setScalar(60 / ppu);
     this.line.material.dashSize = 9 / ppu;
     this.line.material.gapSize = 7 / ppu;
   }
@@ -122,14 +125,16 @@ export class MoveChart {
     }
   }
 
-  /** Move the whole grid from I to M and every point with it. The faint old grid stays underneath. */
-  async apply(M: Mat, o: { path?: Path; ms?: number; flash?: boolean } = {}): Promise<void> {
+  /** Move the whole grid from I to M and every point with it. The faint old grid stays underneath.
+   *  keep: a faint green dot stays where each point started (unlabelled). */
+  async apply(M: Mat, o: { path?: Path; ms?: number; flash?: boolean; keep?: boolean } = {}): Promise<void> {
     const my = ++this.gen;
     const st = this.p.g.stage;
     this.M = M;
     this.path = o.path ?? pathTo(M);
     const grid = this.view.grid;
     for (const q of this.pts) q.tag?.show(false);
+    if (o.keep) this.starts = this.pts.map((q) => { const d = this.dot(q.p, C.v); d.setOpacity(0.4); return d; });
     grid.setLook({ base: 0.45 });
     const ms = o.ms ?? 1500;
     sfx.pulse(ms / 1000);
@@ -199,7 +204,9 @@ export class MoveChart {
   clear(): void {
     this.gen++;
     for (const q of this.all()) { q.dot.dispose(); q.tag?.dispose(); }
+    for (const d of this.starts) d.dispose();
     this.pts = [];
+    this.starts = [];
     this.extra = null;
     this.line.setOpacity(0);
   }

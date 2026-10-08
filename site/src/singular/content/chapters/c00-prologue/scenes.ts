@@ -112,9 +112,10 @@ export async function gridOpen(g: Game): Promise<void> {
 
 /**
  * The first puzzle's three rows, moved by A again: the grid from I to A, each green point to its yellow
- * landing spot. `right`: room to leave on the right for a card (px, desktop only).
+ * landing spot. `right`: room to leave on the right for a card (px, desktop only). `rows: false`: the moving
+ * grid alone (behind a centred card).
  */
-export async function rowsVisual(g: Game, o: { right?: number } = {}): Promise<void> {
+export async function rowsVisual(g: Game, o: { right?: number; rows?: boolean } = {}): Promise<void> {
   g.stage.clearWorld();
   const W = g.stage.size.x, H = g.stage.size.y;
   const height = 11;
@@ -122,17 +123,18 @@ export async function rowsVisual(g: Game, o: { right?: number } = {}): Promise<v
   // the content's box: x from −5 to 4, y from −1 to 4; centred in the part of the screen the card leaves free
   const free = W >= 900 && o.right ? W - o.right : W;
   const cx = -0.5 + (W / 2 - free / 2) / ppu;
-  await g.stage.view2D({ center: [cx, 1.5], height, ms: 0 });
+  await g.stage.view2D({ center: o.rows === false ? [0, 0] : [cx, 1.5], height, ms: 0 });
   const grid = new Grid2D(g.stage, { main: 0.34, base: 0.12, axis: 0.55 });
   grid.mesh.userData.dispose = () => grid.dispose();
   const set0 = grid.set.bind(grid);
   grid.set = (M: Mat, T?: [number, number]) => { set0(M, T); grid.mesh.children.forEach((c) => { c.visible = false; }); };
-  g.stage.world.add(grid.object, originGlow(26 / ppu));
+  g.stage.world.add(grid.object);
+  if (o.rows !== false) g.stage.world.add(originGlow(26 / ppu));
   const alive = () => grid.mesh.parent === g.stage.world;
-  const rows = STEPS.map((s) => [...inputs(s.q), [s.q.row.b[0] + s.q.ask * s.q.row.s[0], s.q.row.b[1] + s.q.ask * s.q.row.s[1]]]);
+  const rows = o.rows === false ? [] : STEPS.map((s) => [...inputs(s.q), [s.q.row.b[0] + s.q.ask * s.q.row.s[0], s.q.row.b[1] + s.q.ask * s.q.row.s[1]]]);
   const dots = rows.flat().map((p) => { const d = new Dot([p[0], p[1], 0.06], { color: C.v, size: 0.075, glow: 1.3 }); d.object.scale.setScalar(60 / ppu); g.stage.world.add(d.object); return { p, d }; });
   const lines = rows.map((r) => {
-    const l = new FatLine(g.stage, [[0, 0, 0.008], [1, 0, 0.008]], { color: C.result, width: 1.4, opacity: 0.4, intensity: 1.1 });
+    const l = new FatLine(g.stage, [[0, 0, 0.008], [1, 0, 0.008]], { color: C.v, width: 1.4, opacity: 0.4, intensity: 1.1 });
     l.object.userData.dispose = () => l.dispose();
     g.stage.world.add(l.object);
     return { r, l };
@@ -154,5 +156,6 @@ export async function rowsVisual(g: Game, o: { right?: number } = {}): Promise<v
     if (!alive()) return;
     draw(Tpartial(Math.PI / 2));
     for (const { d } of dots) d.setColor(C.result);
+    for (const { l } of lines) l.setColor(C.result, 1.1);
   })();
 }
