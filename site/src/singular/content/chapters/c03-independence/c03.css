@@ -1,0 +1,5 @@
+/* Chapter 3 only (c03- prefix: all chapter CSS is global). */
+/* a fourth vector's colour in an equation, matching its copper arrow on the chart */
+.c03-copper { color: #f0b481; }
+/* names on the 3-D chart: a little larger than the kit's, there is no grid to read them against */
+.g-label.a7-tag.c03-tag { font-size: 16px; }
