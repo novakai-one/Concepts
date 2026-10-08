@@ -1,0 +1,4 @@
+/* Labels on the plane chart (kit/plane.ts): small, no box, away from the lines. */
+.g-label.pl-tag { font-family: var(--mono); font-size: 16px; font-weight: 600; color: var(--ink); text-shadow: 0 0 6px rgba(4, 8, 18, 0.95), 0 0 2px rgba(4, 8, 18, 0.95); white-space: nowrap; }
+.g-label.pl-tag.y { color: var(--result); }
+.g-label.pl-tag.b { color: var(--u); }

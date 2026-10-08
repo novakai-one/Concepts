@@ -1,7 +1,7 @@
-// Chapter 11: "What did the pulse do to the grid?" (GDD §6.6, nodes N12 and N13).
-// The spire bench: drag where the grid arrows land and the lattice follows. Reading the routine
-// pulse from the lattice, building pulses, why two landing spots fix every point, the spire clue,
-// A x both ways, Ilse's nine numbers as columns, the Briefing, and the pulse-forecast install.
+// Chapter 11: "Where does a matrix send each vector?" (GDD §6.6, nodes N12 and N13).
+// Games 1–3 (apply.ts): A v = ?, find A, is there a matrix? Ten typed rounds each, then the name
+// "linear transformation". Then the spire clue, A x both ways, Ilse's nine numbers as columns,
+// the Briefing, and the pulse-forecast install.
 import type { ChapterDef, Game } from '../../../game/types';
 import { answer, pin } from '../../../game/caseboard';
 import { glowSprite } from '../../../gfx/markers';
@@ -10,7 +10,8 @@ import { sfx } from '../../../audio/sfx';
 import { bridgeShot, shipExterior } from '../../common/shots';
 import { makeAnchor } from '../../common/set';
 import { coldOpen, fourPulses, installForecast, spireScene } from './cine';
-import { p1, p2, p3, p4, p5, p6, p7 } from './puzzles';
+import { p4, p5, p6, p7 } from './puzzles';
+import { p1, p2, p3 } from './apply';
 import { sayit, doubtTwo, doubtOrigin, law, compare } from './briefing';
 import { buildMatvec } from './build';
 import { S } from './script';
@@ -70,35 +71,32 @@ const ch: ChapterDef = {
   id: 'c11',
   act: 4,
   num: 11,
-  title: 'What did the pulse do to the grid?',
-  subtitle: 'Where every point lands',
+  title: 'Where does a matrix send each vector?',
+  subtitle: 'Matrices as moves of the plane',
   nodes: ['N12', 'N13'],
   palette: 'violet',
   music: 'tension',
   prereqs: ['c02', 'c08'],
-  catchup: 'A **mix** of two arrows is so much of the first plus so much of the second, added tip to tail. The point 2 of (1, 3) plus 1 of (2, −1) is (4, 5). This chapter is about moves of space that keep every such mix.',
-  inShort: 'Where does the pulse send every point? Find where the two grid arrows land. Every other point lands at the same mix of those two landing spots.',
+  calm: true,
+  catchup: 'A **linear combination** of two vectors is so much of the first plus so much of the second, added tip to tail: $2\\begin{bmatrix}1\\\\3\\end{bmatrix} + 1\\begin{bmatrix}2\\\\-1\\end{bmatrix} = \\begin{bmatrix}4\\\\5\\end{bmatrix}$.',
+  inShort: 'Where does a matrix $A$ send each vector $\\mathbf v$?',
   script: S,
   beats: [
     { kind: 'cinematic', id: 'open', run: coldOpen },
-    { kind: 'card', id: 'inshort', card: { kind: 'inshort', title: 'What did the pulse do to the grid?', body: '**Where does the pulse send every point?**\n\nFind where the two grid arrows land. Every other point lands at the same mix of those two landing spots.' } },
+    { kind: 'card', id: 'inshort', card: { kind: 'inshort', title: 'Where does a matrix send each vector?', body: '**Where does a matrix $A$ send each vector $\\mathbf v$?**\n\nType $A\\mathbf v$, apply $A$, and watch the grid move.' } },
     { kind: 'puzzle', id: 'p1', puzzle: p1 },
+    { kind: 'puzzle', id: 'p2', puzzle: p2 },
+    { kind: 'puzzle', id: 'p3', puzzle: p3 },
     {
       kind: 'name', id: 'name-linear', entry: {
-        id: 'linear-transformation', term: 'linear transformation', question: 'What did the pulse do to the grid?', nodes: ['N12'],
-        saw: 'Two tagged buoys told us everything. One step along the first grid arrow landed on **(1, 1)**. One step along the second landed on **(−2, −1)**. The buoy from (3, 2) landed on **3 of the first plus 2 of the second**: (−1, 1). Grid lines stayed straight, parallel and evenly spaced. The origin did not move.',
-        means: 'Every point is a mix of the two grid arrows. The pulse keeps that mix, so the point lands at the same mix of the two landing spots. **Two landing spots fix where every point lands.**',
-        name: 'A **linear transformation** moves space but keeps the origin fixed and grid lines straight, parallel and evenly spaced. The grid arrows $\\mathbf e_1 = (1, 0)$, $\\mathbf e_2 = (0, 1)$ (and $\\mathbf e_3 = (0, 0, 1)$ in 3-D) are the **standard basis vectors**. Geometry books also write them $\\mathbf i, \\mathbf j, \\mathbf k$. The **matrix** of the move lists their landing spots as its columns.',
-        formula: 'T(\\mathbf x) = x_1\\,\\cg{T(\\mathbf e_1)} + x_2\\,\\htmlClass{c-red}{T(\\mathbf e_2)} \\qquad A = \\begin{bmatrix} \\cg{1} & \\htmlClass{c-red}{-2} \\\\ \\cg{1} & \\htmlClass{c-red}{-1} \\end{bmatrix}',
-        why: '$\\mathbf x = x_1\\mathbf e_1 + x_2\\mathbf e_2$, and the move keeps sums and stretches. For the buoy from (3, 2): $3\\,(1, 1) + 2\\,(-2, -1) = (-1, 1)$.',
-        cue: 'When you see a **matrix**, ask **where do the grid arrows land?**',
-        use: 'Every 3-D game turns, stretches and shears its models with matrices: nine numbers move every vertex of a model at once, and the origin stays put. Sliding a model takes a $4 \\times 4$ matrix, with a fourth number added to every point.',
+        id: 'linear-transformation', term: 'linear transformation', question: 'Which moves are matrices?', nodes: ['N12'],
+        saw: '$A\\begin{bmatrix}1\\\\0\\end{bmatrix}$ was column 1 of $A$ and $A\\begin{bmatrix}0\\\\1\\end{bmatrix}$ was column 2. Every $A\\mathbf v$ was $v_1$ of column 1 plus $v_2$ of column 2. A move that shifted $\\mathbf 0$, or bent the grid, had no matrix.',
+        means: 'A matrix moves sums to sums and multiples to multiples. Two columns fix every point.',
+        name: 'A **linear transformation** $T$ has $T(\\mathbf x + \\mathbf y) = T(\\mathbf x) + T(\\mathbf y)$ and $T(k\\mathbf x) = kT(\\mathbf x)$. Its **matrix** has columns $T(\\mathbf e_1)$ and $T(\\mathbf e_2)$, where $\\mathbf e_1 = \\begin{bmatrix}1\\\\0\\end{bmatrix}$, $\\mathbf e_2 = \\begin{bmatrix}0\\\\1\\end{bmatrix}$ are the **standard basis vectors**.',
+        formula: 'A\\mathbf v = v_1\\,\\cg{T(\\mathbf e_1)} + v_2\\,\\cr{T(\\mathbf e_2)}',
+        use: '3-D graphics turn, stretch and shear every vertex of a model with one matrix.',
       },
     },
-    { kind: 'scene', id: 'build', lines: S.build },
-    { kind: 'puzzle', id: 'p2', puzzle: p2 },
-    { kind: 'scene', id: 'why', lines: S.why, setup: (g) => bridgeShot(g) },
-    { kind: 'puzzle', id: 'p3', puzzle: p3 },
     { kind: 'cinematic', id: 'case', run: caseLinear },
     { kind: 'scene', id: 'spires', lines: S.spires, setup: (g) => spireScene(g) },
     { kind: 'puzzle', id: 'p4', puzzle: p4 },

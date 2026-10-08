@@ -11,27 +11,17 @@ export const S: Record<string, Line[]> = {
   afterPulse: [
     { who: 'lantern', text: 'Pulse complete. The first tagged buoy is at (1, 1). The second is at (−2, −1).', say: 'Pulse complete. The first tagged buoy is at one, one. The second is at minus two, minus one.' },
     { who: 'wren', text: 'Two buoys out of four thousand. Is that enough?' },
-    { who: 'bram', text: 'Find out. Nav, the buoy that sat at (3, 2). Call where it went.', say: 'Find out. Nav, the buoy that sat at three, two. Call where it went.' },
   ],
   p1Win: [
-    { who: 'lantern', text: 'Confirmed. The buoy from (3, 2) is at (−1, 1). Three of the first landing step, two of the second.', say: 'Confirmed. The buoy from three, two is at minus one, one. Three of the first landing step, two of the second.' },
-    { who: 'wren', text: 'Two buoys, and you called a third. Keep going.' },
+    { who: 'wren', text: 'Two columns, and every point follows.' },
   ],
-  build: [
-    { who: 'bram', text: 'If two landing spots fix every buoy, we can write a pulse down ourselves. Build me one.' },
-    { who: 'lantern', text: 'Test pattern on the bench. Send (1, 1) to (3, 3). Keep (1, −1) where it is.', say: 'Test pattern on the bench. Send one, one to three, three. Keep one, minus one where it is.' },
-  ],
+  build: [],
   p2Win: [
-    { who: 'lantern', text: '(1, 1) lands on (3, 3). (1, −1) stays where it was. Columns (2, 1) and (1, 2).', say: 'One, one lands on three, three. One, minus one stays where it was. Columns two, one and one, two.' },
-    { who: 'bram', text: 'Four numbers, and that is the whole move. Keep that one. I have a feeling we will see it again.' },
+    { who: 'bram', text: 'Four numbers, and that is the whole move.' },
   ],
-  why: [
-    { who: 'bram', text: 'I do not bolt things on because they worked twice. Show me why two arrows are enough.' },
-    { who: 'bram', text: 'And show me a move the bench cannot make. I want to know where it stops.' },
-  ],
+  why: [],
   p3Win: [
-    { who: 'lantern', text: 'Recorded. The bench cannot move the origin and cannot bend a grid line. Every move it makes keeps both.' },
-    { who: 'bram', text: 'Good. Then I know what I am trusting.' },
+    { who: 'bram', text: 'Good. Then I know which moves a matrix can make.' },
   ],
   caseLinear: [
     { who: 'lantern', text: 'Case board. Why did everything move except the point under the Anchor?' },

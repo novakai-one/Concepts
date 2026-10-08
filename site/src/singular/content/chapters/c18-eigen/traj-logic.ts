@@ -87,30 +87,7 @@ export function checkMult(M: Mat, v: Vec, m: number): MultVerdict {
 
 // ------------------------------------------------------------------ typed numbers
 
-/**
- * Read a typed number. Accepts 3, -1.5, −2 (real minus), +3, .5, 3., 3/4, and a decimal comma (1,5).
- * Returns null for anything else (empty, "-", "1e3", "x/0").
- */
-export function parseEntry(s: string, o: { comma?: boolean } = {}): number | null {
-  let t = s.trim().replace(/[−–]/g, '-').replace(/\s+/g, '').replace(/^\+/, '');
-  // a decimal comma (2,5) where a single number is asked for; never "1,000", and never in a vector part,
-  // where "1,1" is far more likely to be a whole vector typed into one box
-  if (o.comma !== false && /^-?\d*,\d{1,2}$/.test(t)) t = t.replace(',', '.');
-  if (/^-?\d+\.$/.test(t)) t = t.slice(0, -1);
-  const f = t.match(/^(-?\d*\.?\d+)\/(\d*\.?\d+)$/);
-  if (f) {
-    const d = parseFloat(f[2]);
-    const x = d === 0 ? null : parseFloat(f[1]) / d;
-    return x === null || Math.abs(x) > ENTRY_MAX || (x !== 0 && Math.abs(x) < ENTRY_MIN) ? null : x;
-  }
-  if (!/^-?(\d+(\.\d+)?|\.\d+)$/.test(t)) return null;
-  const x = parseFloat(t);
-  // the chart works to a few decimals and four digits: larger or finer entries are refused, not misjudged
-  if (Math.abs(x) > ENTRY_MAX || (x !== 0 && Math.abs(x) < ENTRY_MIN)) return null;
-  return Object.is(x, -0) ? 0 : x;
-}
-export const ENTRY_MAX = 9999;
-export const ENTRY_MIN = 0.001;
+export { parseEntry, ENTRY_MAX, ENTRY_MIN } from '../../../kit/entry.ts';
 
 // ------------------------------------------------------------------ flights and missions
 

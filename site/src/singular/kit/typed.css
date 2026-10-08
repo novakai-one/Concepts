@@ -1,0 +1,81 @@
+/* Typed answers in the dock (kit/typed.ts): the panel, number boxes, stacked vectors, the feedback line. */
+.dock.tj-dock { gap: 0; width: min(470px, calc(100vw - 40px)); max-height: calc(100vh - 210px); overflow-y: auto; }
+.tj { display: flex; flex-direction: column; gap: 9px; }
+.tj-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: 13px; color: var(--ink-2); }
+.tj-mat { font-size: 14px; color: var(--ink); }
+.tj-mat .katex { font-size: 1.02em; }
+.tj-body { display: flex; flex-direction: column; gap: 9px; }
+.tj-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 14px; }
+.tj-row .k { color: var(--ink-2); }
+.tj-vec { display: inline-flex; align-items: center; gap: 4px; font-family: var(--mono); }
+.tj-vl { color: var(--v); margin-right: 2px; font-family: var(--font); }
+.tj-vl.n { color: var(--ink); }
+/* Game 1 asides: matrix note, vector help, colour legend; the number-entry rules fold away */
+.tj-aside { font-size: 12.5px; color: var(--ink-2); line-height: 1.35; }
+.tj-help { font-size: 12.5px; color: var(--ink-2); }
+.tj-help summary { cursor: pointer; width: fit-content; }
+.tj-help > div { margin-top: 4px; line-height: 1.4; }
+.tj-par { color: var(--ink-2); font-size: 18px; }
+.tj-col { position: relative; display: inline-flex; flex-direction: column; gap: 4px; padding: 3px 7px; }
+.tj-col::before, .tj-col::after { content: ''; position: absolute; top: 0; bottom: 0; width: 5px; border: 1.5px solid var(--ink-2); }
+.tj-col::before { left: 0; border-right: none; }
+.tj-col::after { right: 0; border-left: none; }
+.tj-num { display: inline-flex; align-items: center; gap: 2px; }
+.cell.tj-cell { width: 56px; height: 38px; }
+.cell.tj-cell.m { color: var(--result); width: 64px; }
+.btn.tj-pm { min-width: 26px; height: 30px; padding: 0 5px; font-family: var(--mono); }
+.tj-res { font-size: 14px; color: var(--ink); min-height: 20px; }
+.tj-msg { font-size: 13.5px; line-height: 1.5; color: var(--ink-2); min-height: 20px; }
+.tj-msg.good { color: var(--good); }
+.tj-msg.bad { color: #ffb347; }
+.tj-msg.warn { color: #ffb347; }
+.tj-q { display: flex; flex-direction: column; gap: 7px; padding: 9px 11px; border-radius: 10px; border: 1px solid rgba(201, 132, 79, 0.55); background: rgba(201, 132, 79, 0.08); }
+.tj-q .t { font-size: 14px; color: var(--ink); }
+.tj-q.ok { border-color: rgba(61, 220, 132, 0.5); background: rgba(61, 220, 132, 0.06); }
+.tj-lines { display: flex; gap: 6px; flex-wrap: wrap; }
+.tj-lines:empty { display: none; }
+.tj-chip { font-family: var(--mono); font-size: 12.5px; padding: 2px 9px; border-radius: 999px; border: 1px solid rgba(201, 132, 79, 0.65); color: #e8ab7a; background: rgba(201, 132, 79, 0.08); }
+.tj-kick { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+/* phones: one strip above the HUD buttons; the picture is framed in the space above it */
+@media (max-width: 760px) {
+  .dock.tj-dock { left: 8px; right: 8px; bottom: 52px; width: auto; max-width: none; max-height: 44vh; padding: 10px 12px; }
+  .cell.tj-cell { width: 46px; height: 36px; }
+  .btn.tj-pm { min-width: 24px; padding: 0 4px; }
+  /* the objective card shrinks to its instruction, below the top buttons; progress shows in the dock */
+  body:has(.tj-dock) .hud-chapter { display: none; }
+  body:has(.tj-dock) .hud-tl { top: 54px; max-width: calc(100vw - 24px); }
+  body:has(.tj-dock) .objective { padding: 8px 12px; }
+  body:has(.tj-dock) .objective .goal { font-size: 13.5px; line-height: 1.4; }
+  body:has(.tj-dock) .objective .subgoals { display: none; }
+  .tj { gap: 7px; }
+  .tj-msg { font-size: 13px; }
+  /* the HUD layer covers the top of the screen, so the hint sits right above the dock */
+  .l-scene:has(.tj-dock) .hint-box, body:has(.tj-dock) .hint-box { left: 8px; right: 8px; width: auto; top: auto; bottom: calc(52px + var(--tj-dock-h, 44vh) + 8px); transform: none; max-height: 30vh; overflow-y: auto; }
+}
+/* desktop: the hint sits beside the dock, never on top of it */
+@media (min-width: 801px) { .l-scene:has(.tj-dock) .hint-box { left: calc(20px + min(470px, 100vw - 40px) + 14px); top: auto; bottom: 20px; transform: none; } }
+.tj-chip:has(.mtable) { border-radius: 8px; padding: 3px 9px; }
+.tj-qbtn { display: none; }
+/* the round's question, kept in view above its controls */
+.tj-goal { font-size: 14px; line-height: 1.45; color: var(--ink); }
+/* the ± key is for phone keypads with no minus sign; a mouse and keyboard has one */
+@media (pointer: fine) { .btn.tj-pm { display: none; } }
+/* calm screens: one action at a time */
+.calm .tj:not(.tj-more) .tj-aside, .calm .tj:not(.tj-more) .tj-help, .calm .tj-res { display: none; }
+.calm .tj-asking .tj-body > .tj-row:first-child { display: none; }
+.calm .dock.tj-dock { width: min(400px, calc(100vw - 40px)); }
+.calm .tj-msg:empty { display: none; }
+/* a typed 2 × 2 matrix: two columns of boxes, column 1 green, column 2 red (as the chart draws them) */
+.tj-col.tj-m2 { display: inline-grid; grid-template-columns: auto auto; gap: 4px 6px; }
+.tj-ml { color: var(--ink); margin-right: 2px; font-family: var(--font); }
+.cell.tj-cell.c1 { color: var(--v); }
+.cell.tj-cell.c2 { color: var(--w); }
+/* the round counter and the answer row */
+.tj-next { margin-top: 2px; }
+/* the results list after the last round */
+.tj-log { display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; font-size: 13px; }
+.tj-log .n { color: var(--ink-2); }
+.tj-log .independent { color: var(--good); }
+.tj-log .corrected { color: var(--accent); }
+.tj-log .assisted { color: #ffb347; }
+.tj-sum { font-size: 13.5px; line-height: 1.5; color: var(--ink); }
