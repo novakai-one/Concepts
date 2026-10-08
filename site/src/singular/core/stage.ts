@@ -91,6 +91,11 @@ export class Stage {
   autoQuality = true;
   private slowFor = 0;
   private qualityStep = 0;
+  /** The last view a puzzle or scene chose: re-centre goes back here. */
+  private home: { pos: Vector3; target: Vector3; up: Vector3; mode: '2d' | '3d'; orbit: boolean } | null = null;
+  /** True once the player has panned or zoomed away from that view (a programmatic move clears it). */
+  userMoved = false;
+  private readonly viewWatchers = new Set<(moved: boolean) => void>();
 
   constructor(container: HTMLElement, opts: { quality?: 'high' | 'low' } = {}) {
     this.container = container;
@@ -193,7 +198,7 @@ export class Stage {
     }
     stepTweens(performance.now());
     for (const f of [...this.ticks]) f(dt, t);
-    if (this.controls) this.controls.update();
+    if (this.controls) { this.controls.update(); this.watchOrbit(); }
     if (this.shake > 0.0005) {
       const s = this.shake;
       this.camera.position.x += (Math.random() - 0.5) * s;
@@ -251,16 +256,85 @@ export class Stage {
     c.target.copy(target);
     c.enableDamping = true;
     c.dampingFactor = 0.08;
-    c.enablePan = false;
+    // one finger (or the left button) rotates; two fingers pinch and pan; the right button pans
+    c.enablePan = true;
     c.minDistance = 4;
     c.maxDistance = 60;
     c.rotateSpeed = 0.7;
     c.update();
     this.controls = c;
+    if (this.home) this.home.orbit = true;
   }
 
   disposeControls(): void {
-    if (this.controls) { this.controls.dispose(); this.controls = null; }
+    if (this.controls) {
+      // the player may have panned: the next camera move starts from where the view really looks
+      this.lookTarget.copy(this.controls.target);
+      this.controls.dispose();
+      this.controls = null;
+    }
+    this.setUserMoved(false);
+  }
+
+  /** Called with true when the player pans or zooms, false when a programmatic move or re-centre takes over. */
+  onUserView(f: (moved: boolean) => void): () => void {
+    this.viewWatchers.add(f);
+    return () => this.viewWatchers.delete(f);
+  }
+
+  private setUserMoved(v: boolean): void {
+    if (this.userMoved === v) return;
+    this.userMoved = v;
+    for (const f of this.viewWatchers) f(v);
+  }
+
+  /** 3-D: a pan or zoom with the orbit controls (a rotation alone does not count). */
+  private watchOrbit(): void {
+    const c = this.controls, h = this.home;
+    if (!c || !h || this.userMoved) return;
+    const d0 = h.pos.distanceTo(h.target);
+    const d = this.camera.position.distanceTo(c.target);
+    if (c.target.distanceTo(h.target) > 0.02 * d0 || Math.abs(d - d0) > 0.04 * d0) this.setUserMoved(true);
+  }
+
+  /**
+   * The player's pan and zoom of a 2-D view: the plane point under screen point `from` moves under `to`,
+   * then the view zooms by `k` (2 = twice as close) around that point. Zoom stays within 1/4 to 3 times
+   * the distance of the last programmatic view.
+   */
+  userMove(from: { x: number; y: number }, to: { x: number; y: number }, k = 1): void {
+    const a = this.toPlane(from.x, from.y), b = this.toPlane(to.x, to.y);
+    if (!a || !b) return;
+    this.camGen++; // a camera animation still running stops: the player has the view
+    const cam = this.camera.position;
+    const d = a.sub(b);
+    d.z = 0;
+    cam.add(d);
+    this.lookTarget.add(d);
+    if (k !== 1) {
+      const at = b.add(d); // the plane point now under `to`
+      const dist = cam.distanceTo(this.lookTarget);
+      const d0 = this.home ? this.home.pos.distanceTo(this.home.target) : dist;
+      const want = Math.min(d0 * 3, Math.max(d0 / 4, dist / k));
+      const s = want / dist;
+      cam.sub(at).multiplyScalar(s).add(at);
+      this.lookTarget.sub(at).multiplyScalar(s).add(at);
+    }
+    this.camera.lookAt(this.lookTarget);
+    this.setUserMoved(true);
+  }
+
+  /** Back to the last programmatic view (the re-centre button). */
+  async recentre(ms = 450): Promise<void> {
+    const h = this.home;
+    if (!h) return;
+    const { pos, target, up, mode, orbit } = h;
+    this.disposeControls();
+    this.mode = mode;
+    const move = this.moveCamera(pos.clone(), target.clone(), up.clone(), ms);
+    const gen = this.camGen;
+    await move;
+    if (mode === '3d' && orbit && gen === this.camGen) this.enableOrbit(target);
   }
 
   /** Tween the camera to a new position / look target / up vector. */
@@ -269,6 +343,9 @@ export class Stage {
     const p0 = this.camera.position.clone(), t0 = this.lookTarget.clone(), u0 = this.camera.up.clone();
     // a newer camera move wins: an older animation still running stops touching the camera
     const gen = ++this.camGen;
+    // a programmatic view: re-centre comes back here, and it takes over from the player's pan or zoom
+    this.home = { pos: pos.clone(), target: target.clone(), up: up.clone(), mode: this.mode, orbit: false };
+    this.setUserMoved(false);
     const apply = (k: number) => {
       if (gen !== this.camGen) return;
       this.camera.position.lerpVectors(p0, pos, k);

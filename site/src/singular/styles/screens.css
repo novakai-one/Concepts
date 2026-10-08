@@ -427,3 +427,25 @@ button.law-slot.open, button.law-slot:focus-visible { border-color: var(--accent
 .calm .hud-br .hud-more { display: inline-flex; }
 .calm .hud-br:not(.show-more) .hud-extra { display: none; }
 .calm .objective:not(.open) { min-height: 0 !important; height: auto !important; resize: none !important; }
+
+/* Phones, every chapter: the chart first. The title fades, the top bar is only the menu (Log, Case board,
+   Codex and Settings are in it), and Reset / Show me / Skip sit behind More, as on calm screens. */
+@media (max-width: 640px) {
+  .hud-chapter { animation: calm-out 0.8s ease 3s forwards; overflow: hidden; max-height: 120px; }
+  .hud-tl { gap: 0; max-width: calc(100vw - 76px); }
+  .hud-tl > .objective { margin-top: 6px; }
+  .hud-tr > :not(:last-child) { display: none; }
+  .hud-br .hud-more { display: inline-flex; }
+  .hud-br:not(.show-more) .hud-extra { display: none; }
+  /* the dock sits above the Hint / More row, the readout above the dock (--dock-h: runner.ts) */
+  .dock { left: 8px; right: 8px; bottom: 52px; max-width: none; max-height: 44vh; overflow-y: auto; }
+  .readout { left: 8px; right: 8px; bottom: calc(60px + var(--dock-h, 0px)); max-height: 30vh; overflow-y: auto; }
+  /* the Solved card goes under the goal (hud.underGoal), never over the dock's last lines */
+  .hud-tl > .win-card { position: static; width: auto; margin: 8px 0 0; }
+  /* the coding panel: one column that fits the screen, below the menu button */
+  .build { top: 54px; height: calc(100vh - 116px); height: calc(100dvh - 116px); grid-template-columns: minmax(0, 1fr); }
+  .build-left, .build-right { min-width: 0; }
+  .build-modes { flex-wrap: wrap; }
+}
+/* touch screens have no keyboard shortcuts to show */
+@media (pointer: coarse) { .btn .kbd { display: none; } }

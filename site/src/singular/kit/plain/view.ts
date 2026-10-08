@@ -221,7 +221,8 @@ export class PlaneView {
     const height = H / s;
     this.grid.setLook({ fade: Math.max(40, height * 1.4) });
     const last = this.view;
-    const same = last && Math.abs(last.h - height) / height < 0.04 && Math.hypot(last.c[0] - cx, last.c[1] - cy) * s < 12;
+    // after the player's own pan or zoom, glide back rather than jump
+    const same = last && !st.userMoved && Math.abs(last.h - height) / height < 0.04 && Math.hypot(last.c[0] - cx, last.c[1] - cy) * s < 12;
     this.view = { c: [cx, cy], h: height };
     await st.view2D({ center: [cx, cy], height, ms: same ? 0 : o.ms ?? 450 });
   }

@@ -1,6 +1,7 @@
 // The application: boots the stage and UI, shows the title screen and menus, and plays chapters.
 import { Stage } from '../core/stage';
 import { DragManager } from '../core/drag';
+import { ViewNav } from '../core/nav';
 import { Backdrop } from '../gfx/background';
 import { UI, h, inline, md, button, openModal, download } from '../ui/ui';
 import { Dialogue, setCast, history, dialogueSettings } from '../ui/dialogue';
@@ -46,6 +47,7 @@ export class App implements Game {
     if (this.headless || navigator.webdriver) this.stage.autoQuality = false;
     this.bg = new Backdrop(this.stage);
     this.drag = new DragManager(this.stage);
+    new ViewNav(this.stage, () => this.drag.dragging);
     this.ui = new UI(document.body);
     setCast(castMember);
     this.dialogue = new Dialogue(this.ui);
@@ -55,7 +57,9 @@ export class App implements Game {
       onSettings: () => void this.settingsScreen(),
       onLog: () => void this.logScreen(),
       onCase: () => void caseBoardScreen(this.ui),
+      onRecentre: () => void this.stage.recentre(),
     });
+    this.stage.onUserView((moved) => this.hud.showRecentre(moved));
     this.hud.setVisible(false);
     this.runner = new Runner(this, this.hud);
     this.applySettings();
@@ -329,6 +333,8 @@ export class App implements Game {
         button('Restart this part', () => { action = 'restart'; close(); }),
         button('Chapter map', () => { action = 'map'; close(); }),
         button('Codex', () => { close(); void this.codexScreen(); }),
+        button('Log', () => { close(); void this.logScreen(); }),
+        button('Case board', () => { close(); void caseBoardScreen(this.ui); }),
         button('Settings', () => { close(); void this.settingsScreen(); }),
         button('Title screen', () => { action = 'title'; close(); }, { cls: 'ghost' })),
       h('p', { class: 'c-muted keys-help' }, 'Keys: Enter continue · H hint · R reset · F fire · C codex · L who runs what · Esc menu'),

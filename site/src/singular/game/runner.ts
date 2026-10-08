@@ -397,7 +397,7 @@ export class Runner {
 
     // the prediction reveal, then any closing lines
     const card = this.winCard(def, outcome, stars, prediction);
-    this.g.ui.scene.appendChild(card);
+    if (!this.hud.underGoal(card)) this.g.ui.scene.appendChild(card);
     if (def.onWin?.length) await this.guard(this.g.say(def.onWin, { noSkip: false }));
     await this.guard(this.hud.primary('Continue'));
     card.remove();
@@ -623,6 +623,11 @@ class PuzzleCtxImpl implements PuzzleCtx {
       this.dockEl.style.pointerEvents = 'auto';
       this.g.ui.scene.appendChild(this.dockEl);
       floatPanel(this.dockEl, 'dock', 'Controls');
+      // phones stack the readout above the dock (screens.css reads --dock-h)
+      const dock = this.dockEl, root = document.documentElement.style;
+      const ro = new ResizeObserver(() => root.setProperty('--dock-h', `${dock.offsetHeight}px`));
+      ro.observe(dock);
+      this.disposers.push(() => { ro.disconnect(); root.removeProperty('--dock-h'); });
     }
     return this.dockEl;
   }
