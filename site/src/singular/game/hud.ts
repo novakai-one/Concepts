@@ -20,8 +20,10 @@ export class Hud {
   private starsEl: HTMLElement | null = null;
   private progEl: HTMLElement | null = null;
   private hintBtn: HTMLButtonElement | null = null;
+  /** Shown only after the player has panned or zoomed the chart. */
+  private readonly recentreBtn: HTMLButtonElement;
 
-  constructor(private readonly ui: UI, menu: { onMenu: () => void; onCodex: () => void; onSettings: () => void; onLog: () => void; onCase: () => void }) {
+  constructor(private readonly ui: UI, menu: { onMenu: () => void; onCodex: () => void; onSettings: () => void; onLog: () => void; onCase: () => void; onRecentre: () => void }) {
     this.chapterEl = h('div', { class: 'hud-chapter' });
     this.objEl = h('div', { class: 'objective glass' });
     this.objEl.hidden = true;
@@ -35,14 +37,32 @@ export class Hud {
       button('Codex', menu.onCodex, { cls: 'ghost small', title: 'Codex (C)' }),
       button('⚙', menu.onSettings, { cls: 'ghost small icon', title: 'Settings' }),
       button('☰', menu.onMenu, { cls: 'ghost small icon', title: 'Menu (Esc)' }));
-    this.br = h('div', { class: 'hud-br' });
+    this.recentreBtn = button('Re-centre', menu.onRecentre, { cls: 'ghost small hud-recentre', title: 'Back to the starting view' });
+    this.recentreBtn.hidden = true;
+    this.br = h('div', { class: 'hud-br' }, this.recentreBtn);
     ui.hud.append(this.tl, this.tr, this.br);
     for (const el of [this.tl, this.tr, this.br]) el.style.pointerEvents = 'auto';
   }
 
   setChapter(kicker: string, title: string): void {
     this.chapterEl.replaceChildren(h('span', { class: 'kicker' }, kicker), h('span', { class: 't', html: inline(title) }));
+    // calm screens and phones fade the title after a few seconds: start that clock now, not at page load
+    this.chapterEl.style.animation = 'none';
+    void this.chapterEl.offsetHeight;
+    this.chapterEl.style.animation = '';
   }
+
+  showRecentre(v: boolean): void { this.recentreBtn.hidden = !v; }
+
+  /** Phones: a card that must not cover the dock (the Solved card) goes under the goal instead. Returns false on wider screens. */
+  underGoal(el: HTMLElement): boolean {
+    if (!window.matchMedia('(max-width: 640px)').matches) return false;
+    this.tl.append(el);
+    return true;
+  }
+
+  /** The bottom-right controls; the re-centre button stays in front of them. */
+  private setControls(...els: HTMLElement[]): void { this.br.replaceChildren(this.recentreBtn, ...els); }
 
   setObjective(title: string, goal: string, subgoals: string[] = []): void {
     this.objEl.hidden = false;
@@ -80,7 +100,7 @@ export class Hud {
     // calm screens keep only Hint in view; the rest sit behind "More"
     const more = button('More', () => this.br.classList.toggle('show-more'), { cls: 'ghost small hud-more', title: 'Reset, Show me, Skip' });
     this.br.classList.remove('show-more');
-    this.br.replaceChildren(
+    this.setControls(
       button('Reset', c.onReset, { cls: 'ghost small hud-extra', kbd: 'R' }),
       this.hintBtn,
       button('Show me', c.onShowMe, { cls: 'small hud-extra' }),
@@ -94,17 +114,17 @@ export class Hud {
   /** Replace the controls with one primary action (e.g. Continue). Resolves when pressed. */
   primary(label: string, kbd = 'Enter'): Promise<void> {
     return new Promise((resolve) => {
-      const done = () => { document.removeEventListener('keydown', onKey); this.br.replaceChildren(); resolve(); };
+      const done = () => { document.removeEventListener('keydown', onKey); this.setControls(); resolve(); };
       const b = button(label, done, { cls: 'primary', kbd });
       const onKey = (e: KeyboardEvent) => {
         if ((e.key === 'Enter' || e.key === ' ') && !(e.target instanceof HTMLInputElement) && !(e.target instanceof HTMLTextAreaElement)) { e.preventDefault(); done(); }
       };
       document.addEventListener('keydown', onKey);
-      this.br.replaceChildren(b);
+      this.setControls(b);
       b.focus();
     });
   }
 
-  clearControls(): void { this.br.replaceChildren(); }
+  clearControls(): void { this.setControls(); }
   setVisible(v: boolean): void { this.ui.hud.style.visibility = v ? '' : 'hidden'; }
 }
