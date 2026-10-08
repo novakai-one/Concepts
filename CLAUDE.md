@@ -6,6 +6,10 @@ Success is one thing: **the owner understands the maths on the screen.** It is n
 
 The repository is **public**, and merging to `main` publishes the live site.
 
+**Read first:** `docs/singular/ch18-why.md`.
+- It explains how the owner learns, what went wrong in Chapter 18, and what fixed it.
+- Every chapter rebuild follows it, and its checklist.
+
 ---
 
 ## 1. What to optimise for
