@@ -418,7 +418,7 @@ button.law-slot.open, button.law-slot:focus-visible { border-color: var(--accent
 .calm .hud-tr > :last-child { opacity: 0.45; pointer-events: auto; }
 .calm .hud-tr:hover > *, .calm .hud-tr:focus-within > * { opacity: 1; pointer-events: auto; }
 .calm .objective { cursor: pointer; padding: 8px 12px; margin-top: 4px; }
-.calm .objective > .fp-bar { display: none; }
+.calm .objective:not(.fp-min) > .fp-bar { display: none; }
 .calm .objective .prog { display: inline; font-size: 12px; color: var(--ink-2); white-space: nowrap; }
 .calm .objective .stars { display: none; }
 .calm .objective:not(.open) .goal, .calm .objective:not(.open) .subgoals { display: none; }
