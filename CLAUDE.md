@@ -22,6 +22,8 @@ The repository is **public**, and merging to `main` publishes the live site.
   - Finding the idea themselves, by trying values.
   - Calm, uncluttered screens.
   - About ten short practice rounds per new idea (Chapter 18's "Practice: ten short rounds" is the model).
+  - Commander with typed answers only. Start with a few achievable examples, then require real working and varied attempts at university-level maths.
+  - Movement must reveal a mathematical relationship: a submitted vector, angle, transformation, area or order. Avoid decorative motion as a substitute for teaching.
 - **What gets in the way**
   - Jargon and story words standing in for maths words.
   - Long instructions.
@@ -58,6 +60,10 @@ Follow `docs/singular/ch18-plain-style.md` in every chapter you touch:
 
 ## 5. Reporting to the owner
 
+- Review gameplay in **Commander**, using typed numbers. Dragging is not the owner's workflow.
+- Show one problem's screenshots and findings at a time when calibrating a rebuild.
+- Before working on Chapter 4, read `docs/singular/reviews/c04-first-three/review.json` for the typed-only rebuild, teaching rationale and current verification limits.
+- Before working on Chapter 5, read `docs/singular/ch05-first-problem-review.md` for the initial audit and implementation review. Browser checks do not establish learner acceptance.
 - Few words.
   - Bullets, bold headings on their own line, blank lines between sections.
 - Screenshots one at a time, each with a short comment on what to notice.

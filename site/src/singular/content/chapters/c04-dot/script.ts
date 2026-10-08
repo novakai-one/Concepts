@@ -9,20 +9,14 @@ export const S: Record<string, Line[]> = {
     { who: 'bram', text: 'So the loudest light is not the answer. That would have been too easy.' },
     { who: 'wren', text: 'Nav, it\'s your dish. Find her beacon.' },
   ],
-  p1Intro: [
-    { who: 'lantern', text: 'Dish calibration. Test signal: two across, four up. Grid arrow one reads two. Grid arrow two reads four.' },
-  ],
+  p1Intro: [],
   p1Win: [{ who: 'lantern', text: 'Reading ten. Three times the first reading, plus one times the second.' }],
-  p2Intro: [
-    { who: 'wren', text: 'Can the dish point somewhere and hear nothing at all? I want to know where the blind spot is.' },
-  ],
+  p2Intro: [],
   p2Win: [
     { who: 'wren', text: 'Dead quiet. Did we lose the signal?' },
     { who: 'lantern', text: 'Signal strength unchanged. The dish arrow is at a right angle to it.' },
   ],
-  p3Intro: [
-    { who: 'bram', text: 'Two numbers on that panel that always agree. I want to know why before I trust either one.' },
-  ],
+  p3Intro: [],
   p3Win: [{ who: 'lantern', text: 'Both readouts agree for every pair. The dot product is the two lengths times the cosine of the angle.' }],
   p4Intro: [
     { who: 'lantern', text: 'The ark is in view. Its spine runs along one, zero, one. Our heading is one, one, zero.' },

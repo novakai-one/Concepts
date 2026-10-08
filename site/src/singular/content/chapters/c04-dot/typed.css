@@ -1,0 +1,78 @@
+/* First three Chapter 4 puzzles: one active equation and the geometry in the remaining space. */
+body:has(.c04-typed) .hud-chapter {
+  display: none;
+}
+.c04-typed .tj-head {
+  margin-bottom: 2px;
+}
+.c04-typed .tj-goal {
+  font-size: 14px;
+}
+.c04-typed .c04-givens {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.c04-typed .c04-eq {
+  align-items: center;
+  gap: 7px;
+}
+.c04-typed .c04-equivalence {
+  font-size: 13px;
+  line-height: 1.55;
+}
+.c04-typed .c04-input-col {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 7px;
+}
+.c04-typed .c04-input-col::before,
+.c04-typed .c04-input-col::after {
+  height: 100%;
+}
+.c04-typed .tj-msg {
+  line-height: 1.6;
+}
+.c04-typed .tj-msg .katex {
+  font-size: 1em;
+}
+@media (max-width: 760px) {
+  .calm .dock.tj-dock:has(.c04-typed) {
+    width: auto;
+    max-height: 42vh;
+  }
+  body.calm:has(.c04-typed) .hud-tl {
+    top: 12px;
+    right: 58px;
+    max-width: calc(100vw - 74px);
+  }
+  body:has(.c04-typed) .objective {
+    max-width: 100%;
+  }
+  body:has(.c04-typed) .objective .prog {
+    display: none;
+  }
+  .c04-typed .tj-row {
+    font-size: 13px;
+  }
+  .c04-typed .c04-givens {
+    gap: 15px;
+  }
+  .c04-typed .tj-mat {
+    font-size: 13px;
+  }
+  .c04-typed .cell.tj-cell {
+    width: 62px;
+    min-height: 40px;
+  }
+  .c04-typed .btn {
+    min-height: 40px;
+  }
+}
+
+.calm:has(.c04-typed) .g-label.a7-tag.pk-tag.o {
+  display: block !important;
+}
