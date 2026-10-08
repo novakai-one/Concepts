@@ -20,8 +20,8 @@ export const fmtN = (x: number): string => {
 export const fmt2 = (x: number): string => (Math.abs(x) < 0.005 ? '0.00' : x.toFixed(2).replace(/^-/, '−'));
 export const fmtV = (v: readonly number[]): string => `(${v.map(fmtN).join(', ')})`;
 export const fmtV2 = (v: readonly number[]): string => `(${v.map(fmt2).join(', ')})`;
-/** A matrix as TeX (rows). */
-export const texM = (M: Mat): string => `\\begin{bmatrix}${M.map((r) => r.map((x) => nice(x)).join(' & ')).join(' \\\\ ')}\\end{bmatrix}`;
+/** A matrix as TeX, its numbers written as everywhere else in the chapter (2.5, not 5/2). */
+export const texM = (M: Mat): string => `\\begin{bmatrix}${M.map((r) => r.map((x) => fmtN(x).replace(/−/g, '-')).join(' & ')).join(' \\\\ ')}\\end{bmatrix}`;
 /** A vector as a stacked column. */
 const texV = (v: readonly number[]): string => texM(v.map((x) => [x]));
 /** A matrix as small inline TeX (readout rows). */

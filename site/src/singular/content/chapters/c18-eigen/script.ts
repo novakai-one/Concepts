@@ -15,11 +15,9 @@ export const S: Record<string, Line[]> = {
   p1Intro: GAME1_DIALOGUE.intro,
   p1Win: GAME1_DIALOGUE.win,
   p2Intro: [
-    { who: 'bram', text: 'A new matrix: a shear. Check the whole circle before you answer.' },
+    { who: 'bram', text: 'Same question, new matrix.' },
   ],
-  p2Win: [
-    { who: 'lantern', text: 'A shear keeps one line, not two.' },
-  ],
+  p2Win: [],
   p3Intro: [
     { who: 'lantern', text: 'Searching by hand is slow. There is a faster way to find λ.', say: 'Searching by hand is slow. There is a faster way to find lambda.' },
   ],
@@ -31,11 +29,9 @@ export const S: Record<string, Line[]> = {
     { who: 'lantern', text: 'At λ = 0 it is flat already. So 0 is an eigenvalue: some vector goes to zero.', say: 'At lambda equals zero it is flat already. So zero is an eigenvalue: some vector goes to zero.' },
   ],
   p4Intro: [
-    { who: 'wren', text: 'Now the ground-layer matrix, T. Which lines does it keep?' },
+    { who: 'wren', text: 'Same question, new matrix: T.' },
   ],
-  p4Win: [
-    { who: 'bram', text: 'Four of them bring everything home. Not luck. Arithmetic.' },
-  ],
+  p4Win: [],
   p5Intro: [
     { who: 'lantern', text: 'A 3 × 3 matrix. By hand this time.', say: 'A three by three matrix. By hand this time.' },
   ],

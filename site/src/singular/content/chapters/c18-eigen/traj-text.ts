@@ -228,3 +228,87 @@ export const DRILL = {
 
 /** What Scenes 1–3 recorded: the first turned vector, the kept lines in the order found, the first multiple tested. */
 export interface Seen { miss?: [Vec, Vec]; lines: [Vec, Vec, number][]; dupe?: [Vec, Vec, number] }
+
+// ------------------------------------------------------------------ puzzles 2 and 4: find the eigenvectors
+
+/** The words for "find the eigenvectors of M" with Game 1's controls (find.ts). */
+export interface FindText {
+  title: string;
+  goal: string;
+  subgoals: string[];
+  start: string;
+  turned: (v: Vec, w: Vec) => string;
+  kept: (v: Vec) => string;
+  dupe: (v: Vec, base: Vec) => string;
+  found: (v: Vec, m: number) => string;
+  /** Shown when the "there is none" button first appears without a find (no line exists). */
+  noneOffer: string;
+  none: string;
+  /** "There is none" pressed while a line is still to find. */
+  noneEarly: string;
+  done: string;
+  hints: { find: string[]; other: string[]; ask: (v: Vec, w: Vec) => string[] };
+}
+
+const findText = (name: string, o: Pick<FindText, 'title' | 'subgoals' | 'done' | 'found' | 'hints'> & { goal?: string }): FindText => ({
+  goal: `Find the eigenvectors of $${name}$.`,
+  start: `Type a vector $\\mathbf v$. Then press **Apply $${name}$**.`,
+  turned: (v, w) => `$${name}${tv(v)} = ${tv(w)}$. Off its line.`,
+  kept: (v) => `$${tv(v)}$ stayed on its line. Fill in the box:`,
+  dupe: DRILL.hunt.dupe,
+  noneOffer: 'Try more vectors, or press **There is none**.',
+  none: 'There is none',
+  noneEarly: 'There is one. Keep trying.',
+  ...o,
+});
+
+export const SHEAR = findText('A', {
+  title: 'Find the eigenvectors of A',
+  subgoals: ['Find an eigenvector and its $\\lambda$', 'Look for one on a different line'],
+  found: () => 'Right. Is there an eigenvector on a different line? Try more vectors, or press **There is none**.',
+  done: 'Right. Points on the $x$-axis stay on it. Every other point slides sideways, off its line. A matrix like $A$ is called a **shear**.',
+  hints: {
+    find: ['Try vectors on the axes.', `Try $\\mathbf v = ${tv([1, 0])}$.`],
+    other: ['Try a few vectors off the $x$-axis.', 'Every vector off the $x$-axis is turned. Press **There is none**.'],
+    ask: (v, w) => [`$${tv(w)}$ is how many times $${tv(v)}$?`],
+  },
+});
+
+export const TURN = findText('T', {
+  title: 'Find the eigenvectors of T',
+  subgoals: ['Find the eigenvectors of $T$', 'Apply $T$ until the L is back where it started'],
+  found: (v, m) => `$T${tv(v)} = ${tmul(m, v)}$.`,
+  done: 'Right: $T$ turns every vector. It has no eigenvectors.',
+  hints: {
+    find: ['Try a few vectors: on the axes, and on the diagonals.', 'Every vector is turned. Press **There is none**.'],
+    other: [],
+    ask: (v, w) => [`$${tv(w)}$ is how many times $${tv(v)}$?`],
+  },
+});
+
+/** Puzzle 4, second part: T applied again and again to an L. */
+export const TURN_L = {
+  start: 'Press **Apply $T$** until the white L is back on its outline.',
+  apply: 'Apply $T$',
+  step: (k: number, Mk: string, home: boolean, flipped: boolean): string =>
+    `$T${k === 1 ? '' : `^{${k}}`} = ${Mk}${home ? ' = I' : flipped ? ' = -I' : ''}$. ${home ? 'The L is back where it started.' : flipped ? 'Every vector is flipped.' : 'Not back yet.'}`,
+};
+
+/** Puzzle 7 (optional): row reduce A to U, then find U's eigenvectors. */
+export const ROWRED = {
+  ...findText('U', {
+    title: 'Does row reducing keep the eigenvalues?',
+    goal: '$A$ has $\\lambda = 5$ and $2$. Row reduce $A$ to $U$. Does $U$ have the same eigenvalues?',
+    subgoals: ['Row reduce $A$ to $U$', 'Find the eigenvectors of $U$'],
+    found: () => 'Right. Now find one on a different line.',
+    done: '$U$ has $\\lambda = 4$ and $2.5$. $A$ has $\\lambda = 5$ and $2$. Row reducing changes the matrix, so it changes the eigenvalues.',
+    hints: {
+      find: [`$U$ has a zero under the diagonal. Try $\\mathbf v = ${tv([1, 0])}$.`],
+      other: ['Solve $(U - 2.5I)\\mathbf v = \\mathbf 0$: $1.5x + y = 0$.', `Try $\\mathbf v = ${tv([2, -3])}$.`],
+      ask: (v, w) => [`$${tv(w)}$ is how many times $${tv(v)}$?`],
+    },
+  }),
+  before: '$A$ has $\\lambda = 5$ and $2$. Row reduce $A$ to $U$.',
+  reduce: 'Row reduce: $R_2 \\to R_2 - \\tfrac12 R_1$',
+  start: 'Find the eigenvectors of $U$. Type a vector $\\mathbf v$, then press **Apply $U$**.',
+};
