@@ -14,7 +14,7 @@ import { C } from '../../../core/theme';
 import { animate, ease, wait } from '../../../core/tween';
 import { sfx } from '../../../audio/sfx';
 import { h, inline, button } from '../../../ui/ui';
-import { Slider } from '../../../ui/widgets';
+import { Slider, VectorInput } from '../../../ui/widgets';
 import { VectorHandle } from '../../../kit/handle';
 import { AngleArc, RightAngle } from '../../../kit/geom';
 import { StepWorksheet } from '../../../kit/steps';
@@ -23,8 +23,8 @@ import { nice } from '../../../math/frac';
 import { makeLantern } from '../../common/set';
 import { Gauge, addGauges, chime, fmtNum } from '../c04-dot/meter';
 import {
-  DOOR, DOOR_P, DOOR_Q, DOOR_R, HULL_TRIS, P1_V, P1_W, P2_TURN, P3_A, P3_B, P3_N, P3_SQ, P6_V, P7_A, P7_B,
-  P7_C, applyRule, deg, fmt, headingAfter, hullTriangles, outwardCount, outwardReading, p2Won, p3Answer, p3Won,
+  DOOR, DOOR_P, DOOR_Q, DOOR_R, HULL_TRIS, P1_AREA, P1_V, P1_W, P2_TURN, P3_A, P3_B, P3_N, P3_SQ, P6_V, P7_A, P7_B,
+  P7_C, applyRule, deg, fmt, headingAfter, hullTriangles, outwardCount, outwardReading, p1Won, p2Won, p3Answer, p3Won,
   p5Won, p6W, p6Won, p7Won, raised, rotateAbout, triNormal, turns, type Order, type Rule, type Tri,
 } from './logic';
 import { S } from './script';
@@ -32,6 +32,7 @@ import { S } from './script';
 const FROST = '#e8f0ff';
 const v3 = (v: readonly number[]): V3 => [v[0], v[1], v[2] ?? 0];
 const unit = (v: readonly number[]): V3 => { const l = Math.hypot(v[0], v[1], v[2] ?? 0) || 1; return [v[0] / l, v[1] / l, (v[2] ?? 0) / l]; };
+const tolOf = (p: PuzzleCtx) => (p.difficulty === 'commander' ? 0.01 : 0.05);
 
 function lab(p: PuzzleCtx, text: string, at: V3, o: { color?: string; size?: number; className?: string } = {}): Label {
   const l = new Label(text, at, o);
@@ -44,6 +45,18 @@ function panel(p: PuzzleCtx, a: V3, b: V3, opacity = 0.2): Parallelogram {
   const par = new Parallelogram(p.g.stage, a, b, { color: FROST, opacity, edge: 1.4 });
   p.add(par);
   return par;
+}
+
+/** A dashed drop from a 3-D tip to the floor and a dot there: depth cue for dragging in 3-D. */
+function floorGuide(p: PuzzleCtx): (tip: V3) => void {
+  const line = new FatLine(p.g.stage, [[0, 0, 0], [0, 0, 1]], { color: C.white, width: 1.2, opacity: 0.35, dashed: true, dashSize: 0.12, gapSize: 0.1 });
+  const dot0 = new Dot([0, 0, 0], { color: C.white, size: 0.05, glow: 0.6 });
+  p.add(line, dot0);
+  return (t) => {
+    const show = Math.abs(t[2]) > 0.05;
+    line.setOpacity(show ? 0.35 : 0); dot0.setOpacity(show ? 0.7 : 0);
+    line.setPoints([t, [t[0], t[1], 0]]); dot0.at([t[0], t[1], 0]);
+  };
 }
 
 /** A curled arrow around an axis: the turning sense of the right-hand rule. */
@@ -69,8 +82,107 @@ function curl(p: PuzzleCtx, axis: V3, at: number, r: number, color = C.white): G
   return g;
 }
 
-// The first problem is a typed, ten-round practice sequence.
-export { crossPractice as p1 } from './practice';
+// ------------------------------------------------------------------ p1 [D] Find the axis (RAISE)
+
+export const p1: PuzzleDef = {
+  id: 'c05-p1',
+  title: 'Which arrow sticks straight out of the panel?',
+  goal: 'Edges $\\mathbf v = (2, 0, 0)$ and $\\mathbf w = (1, 3, 0)$ shade a panel. **Raise** the yellow arrow $\\mathbf n$ so it reads **0** against both edges and is **as long as the panel\'s area**. Drag its tip (hold **Shift** to drag up or down) or type it.',
+  hints: [
+    'Reading 0 against an edge means a right angle to it. An arrow at a right angle to both floor edges stands straight up or straight down.',
+    'The panel is a parallelogram: base 2, height 3.',
+    'Area 6, straight up: $\\mathbf n = (0, 0, 6)$.',
+  ],
+  par: 3,
+  view: '3d',
+  onWin: S.p1Win,
+  async setup(p) {
+    await p.g.stage.view3D({ target: [1.0, 1.2, 2.9], distance: 21, azimuth: -58, elevation: 20, ms: 0 });
+    p.grid({ base: 0.1, main: 0.18, axis: 0.4 });
+    const v = v3(P1_V), w = v3(P1_W);
+    panel(p, v, w);
+    p.add(new Arrow([0, 0, 0], v, { color: C.v, label: '$\\mathbf v$' }), new Arrow([0, 0, 0], w, { color: C.w, label: '$\\mathbf w$' }));
+    if (p.difficulty !== 'commander') lab(p, 'area 6', [1.5, 1.5, 0.05], { className: 'small' });
+    const ra = new RightAngle(p, [0, 0, 0], v, [0, 0, 1], 0.32, { color: C.white });
+    const rb = new RightAngle(p, [0, 0, 0], w, [0, 0, 1], 0.32, { color: C.white });
+    ra.show(false); rb.show(false);
+    const guide = floorGuide(p);
+    const r = p.readout('RAISE');
+    const gv = new Gauge('reading of $\\mathbf n$ against $\\mathbf v$', { max: 12 });
+    const gw = new Gauge('reading of $\\mathbf n$ against $\\mathbf w$', { max: 30 });
+    addGauges(r, gv, gw);
+    const tol = tolOf(p);
+    let n: V3 = [1, 1, 2];
+    let won = false;
+    const ghost = new Arrow([0, 0, 0], [0, 0, -6], { color: C.result, width: 0.03, opacity: 0, label: '$(0, 0, -6)$' });
+    ghost.setOpacity(0);
+    p.add(ghost);
+    // the gap a miss leaves: the sideways part of n, or the missing (or extra) length along n
+    const gap = new FatLine(p.g.stage, [[0, 0, 0], [0, 0, 1]], { color: C.orange, width: 1.8, opacity: 0, dashed: true, dashSize: 0.14, gapSize: 0.1 });
+    p.add(gap);
+    let warnedLen = false;
+    // cadet: both meters read live while dragging; navigator and commander read them when the arrow is set
+    const live = p.difficulty === 'cadet';
+    const meters = (t: V3, quiet = false) => {
+      const hv = gv.set(dot(t, v), undefined, tol), hw = gw.set(dot(t, w), undefined, tol);
+      if ((hv || hw) && norm(t) > 0.1 && !quiet) chime();
+      ra.show(Math.abs(dot(t, v)) <= tol && norm(t) > 0.3); ra.set([0, 0, 0], v, t);
+      rb.show(Math.abs(dot(t, w)) <= tol && norm(t) > 0.3); rb.set([0, 0, 0], w, t);
+    };
+    const upd = (t: V3) => {
+      n = t;
+      gap.setOpacity(0);
+      guide(t);
+      if (live) meters(t);
+      r.row('n', '$\\mathbf n$', fmt(t.map((x) => Math.round(x * 100) / 100)), C.result);
+      r.row('len', 'length of $\\mathbf n$', fmtNum(norm(t)));
+      if (p.difficulty !== 'commander') r.row('area', 'area of the panel', nice(P1_AREA));
+      vin.set(t.map((x) => Math.round(x * 100) / 100));
+    };
+    /** A miss teaches: the two readings, or the length against the area, and the gap drawn. */
+    const miss = () => {
+      const rv = dot(n, v), rw = dot(n, w), L = norm(n);
+      sfx.miss();
+      if (Math.abs(rv) > tol || Math.abs(rw) > tol) {
+        p.bark('lantern', `Reads ${fmtNum(rv)} against v and ${fmtNum(rw)} against w. Both must read 0.`);
+        gap.setPoints([n, [0, 0, n[2]]]);
+        gap.setOpacity(0.8);
+        return;
+      }
+      const area = p.difficulty === 'commander' ? ' It must be as long as the panel\'s area.' : ` The panel's area is ${nice(P1_AREA)}.`;
+      p.bark('lantern', `Reads 0 against both edges, but it is ${fmtNum(L)} long.${area}`);
+      if (L > 1e-6 && p.difficulty !== 'commander') { gap.setPoints([n, v3(n.map((x) => (x * P1_AREA) / L))]); gap.setOpacity(0.8); }
+    };
+    /** `explicit`: the Raise button or a typed arrow. A drag release only speaks up once, for the near miss. */
+    const commit = async (explicit = false) => {
+      const hit = !won && p1Won(n, tol);
+      const nearMiss = !hit && !won && Math.abs(dot(n, v)) <= tol && Math.abs(dot(n, w)) <= tol;
+      const speak = !hit && !won && (explicit || (nearMiss && !warnedLen));
+      meters(n, speak);
+      if (speak) { if (nearMiss) warnedLen = true; miss(); }
+      if (!hit) return;
+      won = true;
+      nh.setEnabled(false);
+      chime();
+      void burst(p.g.stage, n, C.result, 50, 2, false);
+      await animate(600, (k) => ghost.setOpacity(0.45 * k), ease.out);
+      r.note('$(0, 0, -6)$ also reads 0 against both and is 6 long. The **order** of the edges picks one of the two.');
+      p.win();
+    };
+    const vin = new VectorInput({ dim: 3, values: n, onSubmit: (x) => { nh.set(v3(x)); p.move(); void commit(true); } });
+    const nh = new VectorHandle(p, { to: n, color: C.result, label: '$\\mathbf n$', limit: 8, onChange: upd, onCommit: () => void commit() });
+    p.dock().append(h('div', { style: 'display:flex;gap:10px;align-items:center;font-size:14px' }, h('span', { html: inline('$\\mathbf n =$') }), vin.el,
+      button('Raise', () => { nh.set(v3(vin.get())); p.move(); void commit(true); }, { cls: 'primary small' })));
+    upd(n);
+    meters(n);
+    return {
+      // the demo passes through (0, 0, 2) on the way up: no near-miss bark for it
+      async showMe() { warnedLen = true; await nh.moveTo([0, 0, 2], 700); await nh.moveTo([0, 0, 6], 800); },
+      async solve() { nh.set([0, 0, 6]); await commit(true); },
+      async wrong() { nh.set([0, 0, 5]); await commit(true); nh.set([6, 0, 0]); await commit(true); },
+    };
+  },
+};
 
 // ------------------------------------------------------------------ p2 Which order?
 
