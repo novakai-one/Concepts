@@ -19,5 +19,8 @@
     "Only opening changes are reviewed here, not all 30 practice rounds again",
     "Clarity still needs learner review",
     "PR remains unmerged; production is unchanged"
+  ],
+  "evidence": [
+    "opening-context.png"
   ]
 }
