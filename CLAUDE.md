@@ -4,7 +4,7 @@ This is a solo learning project: games for learning maths. The owner learns by p
 The first game is **SINGULAR** (linear algebra), in `site/src/singular`. More games will follow, each in its own folders.
 Success is one thing: **the owner understands the maths on the screen.** It is not test coverage, and it is not tidy code.
 
-The repository is **public**, and merging to `main` publishes the live site.
+The repository is **public**, and merging to `main` publishes the live site. **Do not edit or push `main`, merge a PR, or deploy unless the owner explicitly asks. Ongoing work ends with an open PR for review.**
 
 **Read first:** `docs/singular/ch18-why.md`.
 - It explains how the owner learns, what went wrong in Chapter 18, and what fixed it.
@@ -80,9 +80,8 @@ Follow `docs/singular/ch18-plain-style.md` in every chapter you touch:
 
 1. Make a new branch from `origin/main`.
 2. Push with `git push -u origin <branch>`.
-3. Open a PR into `main` and merge it once the build passes and the screens look right.
-   - Merging runs `.github/workflows/pages.yml`, which publishes the live site.
-   - When merging through the GitHub tools, `expectedHeadSha` must be the full 40-character SHA.
+3. Open a PR into `main` and leave it unmerged. Passing builds and browser checks do not authorise merging.
+4. Merge or publish only after an explicit instruction from the owner for that action.
 
 ## 8. Where things are
 

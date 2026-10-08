@@ -1,0 +1,23 @@
+{
+  "date": "2026-10-09",
+  "symptom": "Unclear first Chapter 4 screen and blank goal panel",
+  "cause": "The rebuild hid core context behind optional help. Persisted panel:objective min=true hides the goal contents; calm styling also hid its restore bar.",
+  "reproduction": "Headless browser: save panel:objective={min:true}, reload Chapter 4 beat 3, assert Show goal is visible and restores the title. Before correction: Minimized goal has no visible restore control. After correction: restore control and title recovered.",
+  "changes": [
+    "Visible investigation question and definition r=v1*w1+v2*w2",
+    "Two concrete axis-vector suggestions, adapting if the learner tries them in reverse order",
+    "Calculate r names the quantity; feedback identifies the yellow projection and its relation to r",
+    "A minimised goal retains its restore control",
+    "PR-only delivery policy supersedes the previous auto-merge workflow"
+  ],
+  "checks": [
+    "Desktop: restore saved minimised goal; submit both suggested vectors in reverse order; enter practice",
+    "Mobile context 390x844: visible opening context, typed first vector and result; no horizontal overflow",
+    "Production build passed"
+  ],
+  "limits": [
+    "Only opening changes are reviewed here, not all 30 practice rounds again",
+    "Clarity still needs learner review",
+    "PR remains unmerged; production is unchanged"
+  ]
+}

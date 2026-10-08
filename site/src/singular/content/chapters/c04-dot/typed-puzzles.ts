@@ -541,11 +541,16 @@ function explore(p: PuzzleCtx, d: PlainDock, picture: DotPicture, start: () => v
   let busy = false;
   let next: HTMLButtonElement | null = null;
   d.setHead(`$\\mathbf w=${tv(w)}$`);
-  d.kick.textContent = 'Try your own vectors';
-  const title = h('div', { class: 'tj-goal' }, 'Type a vector, then calculate.');
+  d.kick.textContent = 'Explore before practice';
+  const purpose = h('div', { class: 'c04-purpose' }, 'How do direction and length change the result?');
+  const rule = h('div', { class: 'c04-rule', html: inline('$r = v_1w_1 + v_2w_2 = 2v_1 + 4v_2$') });
+  const title = h('div', {
+    class: 'tj-goal',
+    html: inline(`Start with $\\mathbf v=${tv([1, 0])}$, then try $${tv([0, 1])}$.`),
+  });
   const input = new VecField({ onEnter: () => void check() });
-  const go = button('Calculate', () => void check(), { cls: 'primary small' });
-  d.body.replaceChildren(title, h('div', { class: 'tj-row' }, input.el, go));
+  const go = button('Calculate r', () => void check(), { cls: 'primary small' });
+  d.body.replaceChildren(purpose, rule, title, h('div', { class: 'tj-row' }, input.el, go));
   void picture.set([0, 0], w);
   picture.view.arrow('v').hide();
   focusSoon(p, input);
@@ -566,12 +571,20 @@ function explore(p: PuzzleCtx, d: PlainDock, picture: DotPicture, start: () => v
         d.msg(`$${tnb(v[i])}\\times${tnb(w[i])}=${tnp(v[i] * w[i])}$.`);
       });
       if (!picture.live) return;
-      d.msg(`$${calc(v, w)}=${tnp(dot(v, w))}$.`);
+      d.msg(
+        `$r=${calc(v, w)}=${tnp(dot(v, w))}$. Yellow $\\mathbf p$ is the part of $\\mathbf v$ on $\\mathbf w$’s line; $r=\\text{signed length of }\\mathbf p\\times\\|\\mathbf w\\|$.`,
+      );
       seen.add(v.join(','));
-      if (seen.size >= 2 && !next) {
-        next = button('Start ten practice rounds', start, { cls: 'primary small' });
-        d.body.append(next);
-      } else if (seen.size === 1) title.textContent = 'Try a different vector.';
+      if (seen.size >= 2) {
+        title.textContent = 'Try another vector, or start practice.';
+        if (!next) {
+          next = button('Start ten practice rounds', start, { cls: 'primary small' });
+          d.body.append(next);
+        }
+      } else {
+        const suggested = seen.has('0,1') ? [1, 0] : [0, 1];
+        title.innerHTML = inline(`Now try $\\mathbf v=${tv(suggested)}$ and compare.`);
+      }
     } finally {
       busy = false;
       input.enable(true);

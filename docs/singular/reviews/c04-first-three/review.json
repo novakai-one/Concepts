@@ -53,5 +53,12 @@
     "Only initial phone rounds and full mobile derivation were played, rather than all 30 phone rounds",
     "Screenshots and passing checks do not establish learner understanding or acceptance",
     "Later Chapter 4 puzzles and the rest of Act II are outside this change"
-  ]
+  ],
+  "latest_feedback": {
+    "date": "2026-10-09",
+    "status": "Opening clarity was rejected by the learner; prior browser completion checks did not establish understanding.",
+    "finding": "The first screen did not say what Calculate calculates or supply enough context to begin. The goal also became a blank pill when a saved minimised state combined with calm styling.",
+    "correction": "Keep the exploration question and calculation rule visible, give two starting vectors, explain the projection after calculation, and preserve the goal restore control.",
+    "delivery_rule": "Raise PRs only; do not edit main, merge or deploy without explicit user instruction."
+  }
 }

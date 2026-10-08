@@ -76,3 +76,13 @@ body:has(.c04-typed) .hud-chapter {
 .calm:has(.c04-typed) .g-label.a7-tag.pk-tag.o {
   display: block !important;
 }
+
+.c04-purpose {
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.4;
+}
+.c04-rule {
+  color: var(--ink-2);
+  font-size: 14px;
+}
