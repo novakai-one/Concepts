@@ -13,7 +13,6 @@ import {
   type RoundRun,
   type PlainDock,
   type EqRow,
-  VecField,
 } from '../../../kit/plain';
 import { tlen } from '../../../kit/plain/tex';
 import { column as tv, number as tnp, signed as tnb } from './typed-tex';
@@ -37,14 +36,14 @@ import {
 import { DotPicture } from './typed-picture';
 const pair = (v: Vec, w: Vec) => `$\\mathbf v=${tv(v)}\\quad\\mathbf w=${tv(w)}$`;
 const calc = (v: Vec, w: Vec) => `${tnb(v[0])}\\times${tnb(w[0])}+${tnb(v[1])}\\times${tnb(w[1])}`;
-const blank = (v: Vec, i: 0 | 1) =>
-  `\\begin{bmatrix}${i === 0 ? '\\square' : tnp(v[0])}\\\\${i === 1 ? '\\square' : tnp(v[1])}\\end{bmatrix}`;
+const blankSym = (v: Vec, i: 0 | 1) =>
+  `\\begin{bmatrix}${i === 0 ? 'v_1' : tnp(v[0])}\\\\${i === 1 ? 'v_2' : tnp(v[1])}\\end{bmatrix}`;
 const named = (v: Vec, w: Vec) => `${tv(v)}\\cdot${tv(w)}`;
 const roundedRelation = (x: number, digits: number) =>
   Math.abs(x - Number(x.toFixed(digits))) < 1e-12 ? '=' : '\\approx';
 const exact = (a: number, b: number, tol = 1e-8) => Math.abs(a - b) <= tol;
-const HELP =
-  'Green is $\\mathbf v$; blue is $\\mathbf w$. Yellow shows the part of $\\mathbf v$ along $\\mathbf w$. Its signed length times $\\|\\mathbf w\\|$ gives $\\mathbf v\\cdot\\mathbf w$.\n\nDecimals and fractions work. ';
+const RULE = '$\\mathbf v\\cdot\\mathbf w=v_1w_1+v_2w_2$';
+const HELP = 'Multiply matching numbers, then add: $\\mathbf v\\cdot\\mathbf w=v_1w_1+v_2w_2$.\n\nDecimals and fractions work.';
 const ANGLE_HELP =
   'The yellow side joins the vector endpoints: $\\mathbf v-\\mathbf w$. Both formulas calculate the squared length of that side.\n\nUse inverse cosine in degree mode. Give cosines to four decimal places and angles to the nearest $0.1^\\circ$.';
 function scene(p: PuzzleCtx, angle = false): { view: PlaneView; d: PlainDock; picture: DotPicture } {
@@ -57,38 +56,35 @@ function scene(p: PuzzleCtx, angle = false): { view: PlaneView; d: PlainDock; pi
 function productRound(c: ProductCase, i: number, picture: DotPicture): Round {
   const unknown = c.unknown,
     result = dot(c.v, c.w);
+  const sym = unknown === undefined ? '' : `v_${unknown + 1}`;
+  const shown = (v: Vec) =>
+    unknown === undefined ? tv(v) : `\\begin{bmatrix}${unknown === 0 ? sym : tnp(v[0])}\\\\${unknown === 1 ? sym : tnp(v[1])}\\end{bmatrix}`;
   return {
     id: `dot-${i}`,
-    name: unknown === undefined ? 'calculate the result' : `find v${unknown + 1}`,
+    name: unknown === undefined ? 'calculate v · w' : `find v${unknown + 1}`,
     goal:
       unknown === undefined
-        ? i < 2
-          ? 'Multiply matching coordinates and add.'
+        ? i < 3
+          ? 'Multiply matching numbers, then add.'
           : 'Fill in the box.'
-        : `Find $v_${unknown + 1}$.`,
+        : `Find $${sym}$: $${shown(c.v)}\\cdot${tv(c.w)}=${tnp(result)}$.`,
     noHints: i >= 8,
     start(base) {
       const rc = { ...base, live: () => base.live() && picture.live };
       const { p, d } = rc;
       let busy = false,
         done = false;
-      d.setHead(
-        unknown === undefined
-          ? pair(c.v, c.w)
-          : `$\\mathbf v=${blank(c.v, unknown)}\\quad\\mathbf w=${tv(c.w)}$`,
-      );
+      d.setHead(RULE);
       void picture.set(unknown === undefined ? c.v : [0, 0], c.w);
       if (unknown !== undefined) picture.view.arrow('v').hide();
-      const j = unknown === 0 ? 1 : 0;
       const answer = unknown === undefined ? result : c.v[unknown];
       const row = eqRow({
         d,
-        aria: unknown === undefined ? 'the result' : `missing coordinate v${unknown + 1}`,
+        aria: unknown === undefined ? 'v dot w' : `missing number v${unknown + 1}`,
         left:
           unknown === undefined
-            ? (i < 2 ? calc(c.v, c.w) : named(c.v, c.w)) + ' = '
-            : `${tnb(c.w[unknown])}\\times`,
-        right: unknown === undefined ? '' : `+${tnb(c.v[j])}\\times${tnb(c.w[j])}=${tnp(result)}`,
+            ? `${named(c.v, c.w)}=` + (i < 3 ? calc(c.v, c.w) + '=' : '')
+            : `${sym}=`,
         onCheck: async (x) => {
           if (busy || done || !rc.live()) return;
           busy = true;
@@ -98,15 +94,12 @@ function productRound(c: ProductCase, i: number, picture: DotPicture): Round {
           const v = c.v.slice();
           if (unknown !== undefined) v[unknown] = x;
           try {
-            await picture.project(v, c.w, i < 3, unknown === undefined ? x : undefined, (part) => {
-              const j = part - 1;
-              d.msg(`$${tnb(v[j])}\\times${tnb(c.w[j])}=${tnp(v[j] * c.w[j])}$.`);
-            });
+            await picture.reveal(v, c.w);
             if (!rc.live()) return;
             const actual = dot(v, c.w),
               right = exact(x, answer);
             d.msg(
-              `$${calc(v, c.w)}=${tnp(actual)}$.${right ? '' : unknown === undefined ? ` Not $${tnp(x)}$.` : ` Required: $${tnp(result)}$.`}`,
+              `$${calc(v, c.w)}=${tnp(actual)}$.${right ? '' : unknown === undefined ? ` Not $${tnp(x)}$.` : ` Not $${tnp(result)}$.`}`,
               right ? 'good' : 'bad',
             );
             if (!right) {
@@ -131,8 +124,8 @@ function productRound(c: ProductCase, i: number, picture: DotPicture): Round {
             ? []
             : [
                 unknown === undefined
-                  ? 'Multiply the first coordinates, multiply the second coordinates, then add.'
-                  : 'Move the known product to the other side, then divide by the unknown coordinate’s coefficient.',
+                  ? 'Multiply the top numbers, multiply the bottom numbers, then add.'
+                  : `Write $v_1w_1+v_2w_2=${tnp(result)}$ with the numbers you know, then solve for $${sym}$.`,
                 `$${calc(c.v, c.w)}=${tnp(result)}$.`,
               ],
         async show() {
@@ -149,17 +142,20 @@ function perpRound(c: PerpCase, i: number, picture: DotPicture): Round {
   const unknown = c.unknown;
   return {
     id: `perp-${i}`,
-    name: c.constraint ? 'zero with another condition' : 'make the result zero',
+    name: c.constraint ? 'v · w = 0 and one more condition' : 'make v · w = 0',
     noHints: i >= 8,
-    goal: c.constraint
-      ? `Find $\\mathbf v\\ne\\mathbf0$ with $v_1${c.constraint === 'sum' ? '+' : '-'}v_2=${tnp(c.target!)}$.`
-      : 'Find a nonzero vector that gives $0$.',
+    goal:
+      unknown !== undefined
+        ? `Find $v_${unknown + 1}$: $${blankSym(c.answer, unknown)}\\cdot${tv(c.w)}=0$.`
+        : c.constraint
+          ? `Find $\\mathbf v$ with $\\mathbf v\\cdot\\mathbf w=0$ and $v_1${c.constraint === 'sum' ? '+' : '-'}v_2=${tnp(c.target!)}$.`
+          : 'Find any $\\mathbf v\\ne\\mathbf 0$ with $\\mathbf v\\cdot\\mathbf w=0$.',
     start(base) {
       const rc = { ...base, live: () => base.live() && picture.live };
       const { p, d } = rc;
       let busy = false,
         done = false;
-      d.setHead(`$\\mathbf w=${tv(c.w)}$`);
+      d.setHead(RULE);
       void picture.set([0, 0], c.w);
       picture.view.arrow('v').hide();
       const check = async (x: number | Vec) => {
@@ -170,7 +166,7 @@ function perpRound(c: PerpCase, i: number, picture: DotPicture): Round {
         d.msg('');
         p.move();
         try {
-          await picture.project(v, c.w);
+          await picture.reveal(v, c.w);
           if (!rc.live()) return;
           const good = meetsPerp(v, c),
             result = dot(v, c.w);
@@ -202,15 +198,7 @@ function perpRound(c: PerpCase, i: number, picture: DotPicture): Round {
       };
       let row: EqRow<number> | EqRow<Vec>;
       if (unknown !== undefined) {
-        d.setHead(`$\\mathbf v=${blank(c.answer, unknown)}\\quad\\mathbf w=${tv(c.w)}$`);
-        const j = unknown === 0 ? 1 : 0;
-        row = eqRow({
-          d,
-          aria: `missing coordinate v${unknown + 1}`,
-          left: `${tnb(c.w[unknown])}\\times`,
-          right: `+${tnb(c.answer[j])}\\times${tnb(c.w[j])}=0`,
-          onCheck: check,
-        });
+        row = eqRow({ d, aria: `missing number v${unknown + 1}`, left: `v_${unknown + 1}=`, onCheck: check });
       } else row = eqRow({ d, vec: true, left: '', right: `\\cdot${tv(c.w)}=0`, onCheck: check });
       d.body.append(row.el);
       focusSoon(p, row);
@@ -219,7 +207,7 @@ function perpRound(c: PerpCase, i: number, picture: DotPicture): Round {
           done
             ? []
             : [
-                `You need $${tnp(c.w[0])}v_1+${tnp(c.w[1])}v_2=0$.`,
+                `You need $${tnp(c.w[0])}v_1${c.w[1] < 0 ? '' : '+'}${tnp(c.w[1])}v_2=0$.`,
                 c.constraint
                   ? 'Solve that equation together with the other condition.'
                   : 'A multiple of the same perpendicular vector also works.',
@@ -535,94 +523,35 @@ function guided(
     },
   };
 }
-function explore(p: PuzzleCtx, d: PlainDock, picture: DotPicture, start: () => void): RoundRun {
-  const w = [2, 4],
-    seen = new Set<string>();
-  let busy = false;
-  let next: HTMLButtonElement | null = null;
-  d.setHead(`$\\mathbf w=${tv(w)}$`);
-  d.kick.textContent = 'Try your own vectors';
-  const title = h('div', { class: 'tj-goal' }, 'Type a vector, then calculate.');
-  const input = new VecField({ onEnter: () => void check() });
-  const go = button('Calculate', () => void check(), { cls: 'primary small' });
-  d.body.replaceChildren(title, h('div', { class: 'tj-row' }, input.el, go));
-  void picture.set([0, 0], w);
-  picture.view.arrow('v').hide();
-  focusSoon(p, input);
-  const check = async () => {
-    const v = input.get();
-    if (busy) return;
-    if (!v) {
-      d.msg('Type a number in each box.', 'warn');
-      return;
-    }
-    busy = true;
-    input.enable(false);
-    go.disabled = true;
-    d.msg('');
-    try {
-      await picture.project(v, w, true, undefined, (part) => {
-        const i = part - 1;
-        d.msg(`$${tnb(v[i])}\\times${tnb(w[i])}=${tnp(v[i] * w[i])}$.`);
-      });
-      if (!picture.live) return;
-      d.msg(`$${calc(v, w)}=${tnp(dot(v, w))}$.`);
-      seen.add(v.join(','));
-      if (seen.size >= 2 && !next) {
-        next = button('Start ten practice rounds', start, { cls: 'primary small' });
-        d.body.append(next);
-      } else if (seen.size === 1) title.textContent = 'Try a different vector.';
-    } finally {
-      busy = false;
-      input.enable(true);
-      go.disabled = false;
-      if (picture.live) focusSoon(p, input);
-    }
-  };
-  return {
-    hints: () => ['Try a vector with just one nonzero coordinate, then change the other coordinate.'],
-    async show() {
-      for (const v of [
-        [1, 0],
-        [0, 1],
-      ]) {
-        input.set(v);
-        await check();
-      }
-    },
-  };
-}
 export const p1: PuzzleDef = {
   id: 'c04-p1',
-  title: 'Calculate the result',
-  goal: 'Multiply matching coordinates and add.',
-  calm: true,
-  hints: [],
-  par: 14,
-  setup(p) {
-    const { view, d, picture } = scene(p);
-    return guided(
-      p,
-      d,
-      view,
-      'c04-dot-typed-v1',
-      PRODUCT_CASES.map((c, i) => productRound(c, i, picture)),
-      (n) => productRound({ v: [(n % 7) - 3, (n % 5) + 1], w: [2 + (n % 3), -1 - (n % 4)] }, 10 + n, picture),
-      (start) => explore(p, d, picture, start),
-    );
-  },
-};
-export const p2: PuzzleDef = {
-  id: 'c04-p2',
-  title: 'Find a vector that gives zero',
-  goal: 'Find a nonzero vector that gives zero.',
+  title: 'The dot product',
+  goal: 'Multiply matching numbers, then add.',
   calm: true,
   hints: [],
   par: 14,
   setup(p) {
     const { view, d, picture } = scene(p);
     return runDrill(p, {
-      key: 'c04-perp-typed-v1',
+      key: 'c04-dot-v2',
+      d,
+      view,
+      rounds: PRODUCT_CASES.map((c, i) => productRound(c, i, picture)),
+      extra: (n) => productRound({ v: [(n % 7) - 3, (n % 5) + 1], w: [2 + (n % 3), -1 - (n % 4)] }, 10 + n, picture),
+    });
+  },
+};
+export const p2: PuzzleDef = {
+  id: 'c04-p2',
+  title: 'When is v · w = 0?',
+  goal: 'Make v · w = 0.',
+  calm: true,
+  hints: [],
+  par: 14,
+  setup(p) {
+    const { view, d, picture } = scene(p);
+    return runDrill(p, {
+      key: 'c04-perp-v2',
       d,
       view,
       rounds: PERP_CASES.map((c, i) => perpRound(c, i, picture)),

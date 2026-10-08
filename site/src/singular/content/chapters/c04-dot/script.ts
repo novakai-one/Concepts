@@ -10,14 +10,11 @@ export const S: Record<string, Line[]> = {
     { who: 'wren', text: 'Nav, it\'s your dish. Find her beacon.' },
   ],
   p1Intro: [],
-  p1Win: [{ who: 'lantern', text: 'Reading ten. Three times the first reading, plus one times the second.' }],
+  p1Win: [],
   p2Intro: [],
-  p2Win: [
-    { who: 'wren', text: 'Dead quiet. Did we lose the signal?' },
-    { who: 'lantern', text: 'Signal strength unchanged. The dish arrow is at a right angle to it.' },
-  ],
+  p2Win: [],
   p3Intro: [],
-  p3Win: [{ who: 'lantern', text: 'Both readouts agree for every pair. The dot product is the two lengths times the cosine of the angle.' }],
+  p3Win: [],
   p4Intro: [
     { who: 'lantern', text: 'The ark is in view. Its spine runs along one, zero, one. Our heading is one, one, zero.' },
     { who: 'wren', text: 'I want us parallel to her spine before we close in. How far do I turn?' },

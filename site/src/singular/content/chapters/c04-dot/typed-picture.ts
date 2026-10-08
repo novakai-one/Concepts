@@ -14,6 +14,7 @@ const p3 = (v: Vec): V3 => [v[0], v[1], 0.04];
 export class DotPicture {
   private drop: FatLine;
   private arc: AngleArc;
+  private between: AngleArc;
   private square: RightAngle;
   private dead = false;
   get live(): boolean {
@@ -33,7 +34,9 @@ export class DotPicture {
     );
     p.add(this.drop);
     this.arc = new AngleArc(p, [0, 0, 0], [1, 0, 0], [0, 1, 0], { label: '$\\theta$', fill: 0.04 });
+    this.between = new AngleArc(p, [0, 0, 0], [1, 0, 0], [0, 1, 0], { fill: 0.06 });
     this.square = new RightAngle(p, [0, 0, 0], [1, 0, 0], [0, 1, 0]);
+    this.between.show(false);
     this.arc.show(false);
     this.square.show(false);
     p.onDispose(() => {
@@ -46,6 +49,7 @@ export class DotPicture {
     this.drop.setOpacity(0);
     this.square.show(false);
     this.arc.show(false);
+    this.between.show(false);
     this.view.arrow('v', 'g').set(v, [0, 0]).label('$\\mathbf v$');
     if (norm(v) < 1e-9) this.view.arrow('v').hide();
     this.view.arrow('w', 'b').set(w, [0, 0]).label('$\\mathbf w$');
@@ -53,6 +57,23 @@ export class DotPicture {
     this.arc.set(p3(v), p3(w));
     this.arc.show(triangle);
     await this.view.frame([v, w], { ms: 0, min: 1.5 });
+  }
+  /** The typed v grows from the origin; then the angle between v and w, or a right-angle mark when v·w = 0. */
+  async reveal(v: Vec, w: Vec): Promise<void> {
+    await this.set([0, 0], w);
+    if (this.dead || norm(v) < 1e-9) return;
+    await this.view.frame([v, w], { ms: 200, min: 1.5 });
+    await this.view.arrow('v', 'g').grow(v, { from: [0, 0], ms: this.ms(450) });
+    if (this.dead) return;
+    this.view.arrow('v', 'g').label('$\\mathbf v$');
+    if (Math.abs(dot(v, w)) <= 1e-8 * norm(v) * norm(w)) {
+      this.square.size = 16 / this.view.ppu;
+      this.square.set([0, 0, 0.04], p3(w), p3(v));
+      this.square.show(true);
+    } else {
+      this.between.set(p3(v), p3(w));
+      this.between.show(true);
+    }
   }
   private ms(n: number): number {
     return this.p.g.headless ? 1 : this.p.g.settings.reduceMotion ? Math.min(n, 160) : n;

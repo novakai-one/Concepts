@@ -12,17 +12,15 @@ import { S } from './script';
 
 const shot = (v: number) => async (g: Game) => { await arkShot(g, v); };
 
-const IN_SHORT = 'How much does one arrow point along another? **Multiply matching parts and add.** The number is the length of one arrow\'s shadow on the other, times that other arrow\'s length. It is zero exactly at a right angle.';
+const IN_SHORT = 'Two vectors give one number, the **dot product**: multiply matching numbers, then add. $\\begin{bmatrix}3\\\\1\\end{bmatrix}\\cdot\\begin{bmatrix}2\\\\4\\end{bmatrix}=3\\times2+1\\times4=10$. What does that number say about the two vectors?';
 
 const NAME_DOT: Beat = {
   kind: 'name', id: 'name-dot', entry: {
     id: 'dot-product', term: 'dot product', question: 'How much does one arrow point along another?', nodes: ['N05'], visual: shot(1),
-    saw: 'You found $3 \\times 2 + 1 \\times 4 = 10$. You also found a nonzero vector whose result was $0$, perpendicular to the other vector.',
+    saw: 'You calculated $3 \\times 2 + 1 \\times 4 = 10$, and you found vectors with $\\mathbf v\\cdot\\mathbf w = 0$: at a right angle.',
     means: 'Multiply matching coordinates and add. For nonzero vectors: **positive** means an angle below 90°, **zero** means 90°, and **negative** means above 90°. The size also depends on both lengths.',
     name: 'This number is the **dot product** $\\mathbf v\\cdot\\mathbf w$. It is one number, not an arrow. Two arrows whose dot product is 0 are **orthogonal**: at a right angle, or one of them is the zero vector.',
     formula: '\\cg{\\mathbf v}\\cdot\\cr{\\mathbf w} = \\cg{v_1}\\cr{w_1} + \\cg{v_2}\\cr{w_2} + \\cg{v_3}\\cr{w_3} \\qquad \\begin{bmatrix}3\\\\1\\end{bmatrix}\\cdot\\begin{bmatrix}2\\\\4\\end{bmatrix} = 6 + 4 = 10',
-    why: 'The reading of $a(1, 0) + b(0, 1)$ is $a$ times the reading of $(1, 0)$ plus $b$ times the reading of $(0, 1)$, because shadows add along a line. Those two readings are the signal\'s own parts.',
-    cue: 'When you see **“how aligned”** or **“at a right angle?”**, think **dot product**.',
     use: 'One neuron in a network computes a dot product: its weights times its inputs, added.',
   },
 };
