@@ -46,7 +46,7 @@ const exact = (a: number, b: number, tol = 1e-8) => Math.abs(a - b) <= tol;
 const HELP =
   'Green is $\\mathbf v$; blue is $\\mathbf w$. Yellow shows the part of $\\mathbf v$ along $\\mathbf w$. Its signed length times $\\|\\mathbf w\\|$ gives $\\mathbf v\\cdot\\mathbf w$.\n\nDecimals and fractions work. ';
 const ANGLE_HELP =
-  'The yellow side joins the vector endpoints: $\\mathbf v-\\mathbf w$. Coordinate expansion and the cosine rule give its same squared length.\n\nUse inverse cosine in degree mode. Give cosines to four decimal places and angles to the nearest $0.1^\\circ$.';
+  'The yellow side joins the vector endpoints: $\\mathbf v-\\mathbf w$. Both formulas calculate the squared length of that side.\n\nUse inverse cosine in degree mode. Give cosines to four decimal places and angles to the nearest $0.1^\\circ$.';
 function scene(p: PuzzleCtx, angle = false): { view: PlaneView; d: PlainDock; picture: DotPicture } {
   const d = plainDock(p, { help: angle ? ANGLE_HELP : HELP });
   d.root.classList.add('c04-typed');
@@ -77,7 +77,7 @@ function productRound(c: ProductCase, i: number, picture: DotPicture): Round {
           ? pair(c.v, c.w)
           : `$\\mathbf v=${blank(c.v, unknown)}\\quad\\mathbf w=${tv(c.w)}$`,
       );
-      void picture.set(c.v, c.w);
+      void picture.set(unknown === undefined ? c.v : [0, 0], c.w);
       if (unknown !== undefined) picture.view.arrow('v').hide();
       const j = unknown === 0 ? 1 : 0;
       const answer = unknown === undefined ? result : c.v[unknown];
@@ -551,7 +551,11 @@ function explore(p: PuzzleCtx, d: PlainDock, picture: DotPicture, start: () => v
   focusSoon(p, input);
   const check = async () => {
     const v = input.get();
-    if (!v || busy) return;
+    if (busy) return;
+    if (!v) {
+      d.msg('Type a number in each box.', 'warn');
+      return;
+    }
     busy = true;
     input.enable(false);
     go.disabled = true;
