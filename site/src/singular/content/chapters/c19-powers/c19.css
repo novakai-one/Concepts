@@ -1,0 +1,12 @@
+/* Chapter 19: the rail of factors (P D P⁻¹ repeated), cancelling pairs. */
+.c19-strip { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; padding: 8px 10px; border-radius: 12px; background: rgba(4, 8, 18, 0.55); border: 1px dashed rgba(160, 190, 230, 0.28); min-height: 46px; }
+.c19-chip { display: inline-flex; align-items: center; justify-content: center; min-width: 34px; height: 30px; padding: 0 6px; border-radius: 8px; background: rgba(16, 24, 42, 0.92); border: 1px solid rgba(160, 190, 230, 0.22); color: var(--ink); font-size: 14px; transition: opacity 0.35s, transform 0.35s, border-color 0.2s; }
+.c19-chip.D { border-color: rgba(179, 136, 255, 0.55); color: var(--violet); }
+.c19-chip.D.big { min-width: 54px; }
+.c19-chip.pair { border-color: var(--result); box-shadow: 0 0 0 2px rgba(255, 209, 102, 0.25); }
+.c19-chip.id { border-color: rgba(61, 220, 132, 0.6); color: var(--good); }
+.c19-chip.gone { opacity: 0; transform: scale(0.6); }
+.c19-dot { color: var(--muted); font-family: var(--mono); padding: 0 2px; }
+.c19-more { color: var(--muted); font-size: 12.5px; padding-left: 6px; }
+.a7-btns .btn.on { border-color: var(--violet); color: var(--violet); }
+.c19-fib { font-family: var(--mono); font-size: 13px; }

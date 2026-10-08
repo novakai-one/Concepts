@@ -1,0 +1,243 @@
+/* RowOpsBoard (kit/rowops.ts): an augmented matrix the player row-reduces. Dark glass, cyan accent,
+   rows tinted with the colour of their line / plane (--rc). */
+
+.rob, .rob-drag-ghost {
+  --rob-gut: 28px;      /* left gutter with the swap buttons */
+  --rob-grip: 54px;     /* grip + row name */
+  --rob-cw: 60px;       /* one number column */
+  --rob-barw: 14px;     /* the augmented bar */
+  --rob-act: 36px;      /* the multiply button */
+  --rob-rh: 48px;       /* row height */
+  --rob-gap: 4px;
+}
+.rob { position: relative; display: flex; flex-direction: column; gap: 10px; min-width: 0; user-select: none; -webkit-user-select: none; }
+.dock.rob-dock { max-width: min(560px, calc(100vw - 40px)); padding: 14px 16px 12px; }
+
+/* ---------- heading and status ---------- */
+.rob-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.rob-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.rob-chip {
+  display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 8px; border-radius: 999px;
+  font-size: 11.5px; font-weight: 600; letter-spacing: 0.01em; color: var(--muted);
+  border: 1px solid var(--line-2); background: rgba(6, 10, 22, 0.5); transition: color 0.3s, border-color 0.3s, background 0.3s, box-shadow 0.3s;
+}
+.rob-chip-dot { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid currentColor; transition: background 0.3s, box-shadow 0.3s; }
+.rob-chip.on { color: var(--good); border-color: rgba(61, 220, 132, 0.5); background: rgba(61, 220, 132, 0.1); box-shadow: 0 0 16px rgba(61, 220, 132, 0.16); }
+.rob-chip.on .rob-chip-dot { background: var(--good); box-shadow: 0 0 8px var(--good); }
+
+/* ---------- the matrix ---------- */
+.rob-grid { display: grid; grid-template-columns: var(--rob-tpl); column-gap: var(--rob-gap); align-items: center; }
+.rob-mat { display: flex; flex-direction: column; gap: 2px; align-self: flex-start; }
+.rob-colhead { padding-left: var(--rob-gut); height: 18px; font-size: 14px; color: var(--ink-2); opacity: 0.75; }
+.rob-cn { text-align: center; }
+.rob-rows { position: relative; padding-left: var(--rob-gut); }
+.rob-rowlist { position: relative; }
+
+.rob-row {
+  position: relative; height: var(--rob-rh); border-radius: 10px; cursor: grab; touch-action: none; outline: none;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--rc) 15%, transparent), color-mix(in srgb, var(--rc) 5%, transparent) 55%, transparent 92%);
+  transition: background 0.2s, box-shadow 0.2s, opacity 0.2s;
+}
+.rob-row::before {
+  content: ''; position: absolute; left: 0; top: 9px; bottom: 9px; width: 3px; border-radius: 2px;
+  background: var(--rc); box-shadow: 0 0 10px var(--rc); opacity: 0.9;
+}
+.rob-row:hover { background: linear-gradient(90deg, color-mix(in srgb, var(--rc) 22%, transparent), color-mix(in srgb, var(--rc) 8%, transparent) 55%, transparent 95%); }
+.rob-row:focus-visible { box-shadow: 0 0 0 2px var(--accent), 0 0 20px rgba(89, 225, 255, 0.25); }
+.rob-row:active { cursor: grabbing; }
+.rob-row.rob-moving { z-index: 2; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45), inset 0 0 0 1px color-mix(in srgb, var(--rc) 60%, transparent); background: color-mix(in srgb, var(--rc) 16%, rgba(10, 16, 32, 0.95)); }
+.rob-row.rob-dragging { opacity: 0.3; }
+.rob-row.rob-drop { box-shadow: inset 0 0 0 2px var(--accent), 0 0 24px rgba(89, 225, 255, 0.35); background: linear-gradient(90deg, rgba(89, 225, 255, 0.16), rgba(89, 225, 255, 0.04) 70%, transparent); }
+.rob-row.rob-target { box-shadow: inset 0 0 0 1.5px var(--rc), 0 0 22px -6px var(--rc); }
+.rob-row.rob-source, .rob-row.rob-src-pulse { outline: 1.5px dashed color-mix(in srgb, var(--rc) 75%, transparent); outline-offset: -2px; }
+
+.rob-grip { display: flex; align-items: center; gap: 7px; height: 100%; padding-left: 11px; font: 700 13px var(--mono); color: var(--ink-2); }
+.rob-dots {
+  width: 7px; height: 15px; flex: none; opacity: 0.5;
+  background-image: radial-gradient(circle, currentColor 1.1px, transparent 1.5px); background-size: 3.5px 5px;
+}
+.rob-row:hover .rob-dots { opacity: 0.9; }
+.rob-rl { color: var(--rc); letter-spacing: 0.02em; text-shadow: 0 0 10px color-mix(in srgb, var(--rc) 50%, transparent); }
+
+.rob-cell {
+  position: relative; height: 100%; display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 19px; font-weight: 500; color: var(--ink); font-variant-numeric: tabular-nums;
+  transition: color 0.3s, opacity 0.3s;
+}
+.rob-v { display: inline-flex; align-items: center; }
+.rob-v-out { position: absolute; inset: 0; justify-content: center; pointer-events: none; }
+.rob-cell.rob-zero { color: var(--muted); opacity: 0.6; }
+.rob-is-ref .rob-cell.rob-stair { opacity: 0.32; }
+.rob-cell.rob-pivot { color: #ffffff; text-shadow: 0 0 12px rgba(89, 225, 255, 0.7); }
+.rob-cell.rob-pivot::before {
+  content: ''; position: absolute; inset: 7px 9px; border-radius: 10px; pointer-events: none;
+  border: 1.5px solid var(--accent); background: rgba(89, 225, 255, 0.07);
+  box-shadow: 0 0 14px rgba(89, 225, 255, 0.45), inset 0 0 10px rgba(89, 225, 255, 0.15);
+  animation: rob-piv 0.45s cubic-bezier(.2, .8, .2, 1);
+}
+.rob-is-rref .rob-cell.rob-pivot { text-shadow: 0 0 12px rgba(255, 209, 102, 0.75); }
+.rob-is-rref .rob-cell.rob-pivot::before { border-color: var(--result); background: rgba(255, 209, 102, 0.08); box-shadow: 0 0 16px rgba(255, 209, 102, 0.45), inset 0 0 10px rgba(255, 209, 102, 0.15); }
+@keyframes rob-piv { from { transform: scale(1.35); opacity: 0; } to { transform: none; opacity: 1; } }
+.rob-row.rob-bad-row .rob-rhs { color: var(--bad); text-shadow: 0 0 12px rgba(255, 92, 108, 0.6); opacity: 1; }
+
+/* stacked fractions */
+.rob-fr { display: inline-flex; flex-direction: column; align-items: center; font-size: 13.5px; line-height: 1.08; margin-left: 1px; }
+.rob-fr-n { padding: 0 3px 1px; border-bottom: 1.4px solid currentColor; }
+.rob-fr-d { padding-top: 1px; }
+.rob-minus { margin-right: -1px; }
+
+/* the augmented bar and the brackets */
+.rob-bar { justify-self: center; width: 2px; height: calc(100% + 1px); background: var(--ink-2); opacity: 0.55; border-radius: 1px; }
+.rob-brk { position: absolute; top: 3px; bottom: 3px; width: 9px; border: 2px solid var(--ink-2); opacity: 0.6; pointer-events: none; }
+.rob-brk-l { left: calc(var(--rob-gut) + var(--rob-grip) + 1px); border-right: 0; border-radius: 7px 0 0 7px; }
+.rob-brk-r { right: calc(var(--rob-act) + 1px); border-left: 0; border-radius: 0 7px 7px 0; }
+
+/* buttons on the matrix */
+.rob-scale {
+  justify-self: center; width: 28px; height: 28px; padding: 0; border-radius: 8px; cursor: pointer;
+  border: 1px solid var(--line-2); background: rgba(89, 225, 255, 0.06); color: var(--ink-2); font-size: 16px; line-height: 1;
+  transition: color 0.15s, border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+.rob-scale:hover { color: var(--ink); border-color: var(--accent); box-shadow: 0 0 14px rgba(89, 225, 255, 0.3); background: rgba(89, 225, 255, 0.14); }
+.rob-swaps { position: absolute; left: 0; top: 0; bottom: 0; width: var(--rob-gut); z-index: 3; }
+.rob-swap {
+  position: absolute; left: 1px; width: 24px; height: 24px; margin-top: -12px; padding: 0; border-radius: 50%; cursor: pointer;
+  display: grid; place-items: center; font-size: 13px; line-height: 1;
+  border: 1px solid var(--line-2); background: rgba(10, 16, 32, 0.92); color: var(--ink-2);
+  transition: color 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+.rob-swap:hover { color: var(--ink); border-color: var(--accent); box-shadow: 0 0 14px rgba(89, 225, 255, 0.35); transform: scale(1.1); }
+.rob-locked .rob-row { cursor: default; }
+.rob-locked .rob-swap, .rob-locked .rob-scale { opacity: 0.3; cursor: default; }
+.rob-is-dragging .rob-swap { opacity: 0.2; }
+
+/* animation helpers */
+.rob-ghost {
+  position: absolute; left: 0; right: 0; height: var(--rob-rh); z-index: 4; pointer-events: none; border-radius: 10px;
+  border: 1px dashed color-mix(in srgb, var(--rc) 75%, transparent);
+  background: color-mix(in srgb, var(--rc) 16%, rgba(6, 10, 22, 0.88));
+  box-shadow: 0 0 24px -4px color-mix(in srgb, var(--rc) 60%, transparent);
+}
+.rob-ghost .rob-cell { font-size: 16px; color: color-mix(in srgb, var(--rc) 70%, #ffffff); }
+.rob-ghost-k { padding-left: 8px; font: 700 12px var(--mono); color: var(--rc); white-space: nowrap; display: inline-flex; align-items: center; }
+.rob-ghost-k .rob-fr { font-size: 10px; }
+.rob-badge {
+  position: absolute; left: 50%; top: 50%; z-index: 3; pointer-events: none; display: inline-flex; align-items: center;
+  padding: 3px 11px; border-radius: 999px; font: 700 15px var(--mono); color: #04121a;
+  background: var(--rc); box-shadow: 0 0 22px var(--rc); transform: translate(-50%, -50%);
+}
+.rob-badge .rob-fr { font-size: 11px; }
+.rob-drag-ghost {
+  position: fixed; z-index: 1000; pointer-events: none; margin: 0; font-family: var(--font); color: var(--ink); opacity: 0.88;
+  background: color-mix(in srgb, var(--rc) 22%, rgba(10, 16, 32, 0.94)) !important;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.55), 0 0 0 1px var(--rc), 0 0 26px -6px var(--rc) !important;
+}
+.rob-drag-ghost .rob-scale { visibility: hidden; }
+
+/* ---------- the floating box beside the matrix: drag hint and composer ---------- */
+.rob-pop {
+  position: absolute; z-index: 30; left: calc(100% + 30px); top: var(--rob-pop-y, 80px); transform: translateY(-50%);
+  width: max-content; max-width: 400px;
+}
+.rob-pop::before {
+  content: ''; position: absolute; left: -7px; top: 50%; width: 12px; height: 12px; transform: translateY(-50%) rotate(45deg);
+  background: rgba(12, 20, 40, 0.96); border-left: 1px solid rgba(89, 225, 255, 0.45); border-bottom: 1px solid rgba(89, 225, 255, 0.45);
+}
+.rob-draghint {
+  padding: 9px 13px; border-radius: 11px; font-size: 13.5px; line-height: 1.45; color: var(--ink-2); max-width: 300px;
+  background: rgba(12, 20, 40, 0.96); border: 1px solid rgba(89, 225, 255, 0.45); box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+.rob-draghint.on { color: var(--ink); border-color: var(--accent); box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45), 0 0 22px rgba(89, 225, 255, 0.25); }
+.rob-draghint .katex { font-size: 1.08em; color: var(--accent); }
+.rob-draghint-sub { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+/* ---------- composer (add a multiple / multiply) ---------- */
+.rob-comp {
+  display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border-radius: 13px; min-width: 330px;
+  border: 1px solid rgba(89, 225, 255, 0.45); background: rgba(12, 20, 40, 0.96);
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.5), 0 0 26px rgba(89, 225, 255, 0.12), inset 0 1px 0 rgba(160, 200, 255, 0.08);
+}
+.rob-comp-title { font: 600 11px var(--display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); }
+.rob-comp-line { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-family: var(--mono); font-size: 16px; }
+.rob-tag {
+  font: 700 14px var(--mono); color: var(--rc); padding: 3px 8px; border-radius: 7px;
+  background: color-mix(in srgb, var(--rc) 14%, transparent); border: 1px solid color-mix(in srgb, var(--rc) 42%, transparent);
+}
+.rob-op { color: var(--ink-2); }
+.rob-k {
+  width: 86px; height: 34px; border-radius: 8px; outline: none; text-align: center;
+  background: rgba(4, 8, 18, 0.85); border: 1px solid var(--accent); color: var(--ink); font: 600 17px var(--mono);
+  box-shadow: 0 0 0 3px rgba(89, 225, 255, 0.14); user-select: text; -webkit-user-select: text;
+}
+.rob-k.bad { border-color: var(--bad); box-shadow: 0 0 0 3px rgba(255, 92, 108, 0.16); }
+.rob-srcs { display: inline-flex; gap: 4px; }
+.rob-src {
+  font: 700 13px var(--mono); padding: 4px 9px; border-radius: 7px; cursor: pointer;
+  border: 1px solid var(--line-2); background: transparent; color: var(--muted); transition: all 0.15s;
+}
+.rob-src:hover { color: var(--ink); }
+.rob-src[aria-checked="true"] { color: var(--rc); border-color: var(--rc); background: color-mix(in srgb, var(--rc) 14%, transparent); }
+.rob-prev {
+  height: 38px; border-radius: 9px; padding-right: 4px; width: max-content;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--rc) 11%, transparent), transparent 85%);
+  border: 1px dashed color-mix(in srgb, var(--rc) 35%, transparent);
+}
+.rob-prev .rob-cell { font-size: 16px; }
+.rob-prev .rob-bar { height: 70%; }
+.rob-prev-k { padding-left: 8px; font: 700 11px var(--mono); color: var(--rc); white-space: nowrap; }
+.rob-msg { font-size: 12.5px; line-height: 1.4; color: var(--ink-2); min-height: 1em; }
+.rob-msg-bad { color: var(--bad); }
+.rob-comp-btns { display: flex; gap: 8px; align-items: center; }
+.rob-alt { font-size: 12.5px; color: var(--muted); white-space: nowrap; }
+.rob-link { padding: 0; border: 0; background: none; cursor: pointer; font: inherit; color: var(--accent); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(89, 225, 255, 0.4); }
+.rob-link:hover { color: #8beaff; }
+.rob-flex { flex: 1; }
+
+/* ---------- what the rows say ---------- */
+.rob-read {
+  font-size: 14px; line-height: 1.55; color: var(--ink-2); padding: 8px 12px; border-radius: 10px;
+  background: rgba(255, 209, 102, 0.07); border: 1px solid rgba(255, 209, 102, 0.3);
+}
+.rob-read-k { display: block; font: 600 11px var(--display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--result); margin-bottom: 2px; }
+.rob-read .katex { font-size: 1.08em; color: var(--ink); }
+.rob-read[data-k="none"] { background: rgba(255, 92, 108, 0.07); border-color: rgba(255, 92, 108, 0.32); }
+.rob-read[data-k="none"] .rob-read-k { color: var(--bad); }
+
+/* ---------- history and help ---------- */
+.rob-foot { display: flex; gap: 10px; align-items: flex-end; justify-content: space-between; border-top: 1px solid var(--line); padding-top: 9px; }
+.rob-hist-wrap { flex: 1; min-width: 0; }
+.rob-hist-head { display: flex; gap: 8px; align-items: baseline; }
+.rob-count { font: 600 11px var(--mono); color: var(--ink-2); }
+.rob-hist { list-style: none; margin: 5px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 5px; max-height: 64px; overflow-y: auto; }
+.rob-step {
+  display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px 2px 5px; border-radius: 7px; font-size: 12.5px;
+  background: rgba(140, 180, 255, 0.07); border: 1px solid var(--line); color: var(--ink-2);
+}
+.rob-step .katex { font-size: 1em; }
+.rob-step-n { font: 600 10px var(--mono); color: var(--muted); }
+.rob-step-new { border-color: rgba(89, 225, 255, 0.45); color: var(--ink); background: rgba(89, 225, 255, 0.1); }
+.rob-hist-empty { font-size: 12.5px; color: var(--muted); }
+.rob-undo { flex: none; }
+.rob-help { font-size: 12px; color: var(--muted); line-height: 1.45; }
+.rob-keys { display: block; font-size: 11.5px; opacity: 0.85; }
+.rob-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ---------- labels in the 3-D view (SystemView) ---------- */
+.g-label.rob-eq { font-size: 14px; font-weight: 600; padding: 2px 8px; border-radius: 7px; background: rgba(6, 10, 22, 0.66); border: 1px solid color-mix(in srgb, currentColor 35%, transparent); }
+.g-label.rob-eq .katex { font-size: 1.02em; }
+.g-label.rob-sol { font-family: var(--mono); font-size: 13px; font-weight: 600; color: var(--result); padding: 2px 8px; border-radius: 999px; background: rgba(6, 10, 22, 0.7); border: 1px solid rgba(255, 209, 102, 0.4); }
+.g-label.rob-axis { font-size: 14px; font-style: italic; color: var(--ink-2); opacity: 0.8; }
+
+@media (max-width: 1100px) {
+  /* inline, above the matrix: the dock grows upward from its bottom edge, so the rows stay put */
+  .rob-head { order: 0; } .rob-pop { order: 1; } .rob-mat { order: 2; } .rob-read { order: 3; } .rob-foot { order: 4; } .rob-help { order: 5; }
+  .rob-pop { position: static; transform: none; width: auto; max-width: none; }
+  .rob-draghint { max-width: none; }
+  .rob-pop::before { display: none; }
+  .rob-comp { min-width: 0; }
+}
+@media (max-width: 760px) {
+  .rob, .rob-drag-ghost { --rob-gut: 24px; --rob-grip: 46px; --rob-cw: 50px; --rob-act: 32px; --rob-rh: 44px; }
+  .rob-cell { font-size: 16px; }
+  .rob-help { display: none; }
+}

@@ -1,0 +1,68 @@
+/* Act V (Collapse): chapter-local styles for Chapters 15 and 16. Scoped by act5- classes. */
+
+/* room captions ("inputs", "landings") */
+.g-label.act5-cap { font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-2); white-space: nowrap; padding: 2px 8px; border-radius: 6px; background: rgba(6, 10, 22, 0.55); }
+/* point tags in the scene */
+.g-label.act5-pt { font-family: var(--mono); font-size: 12.5px; font-weight: 600; color: var(--ink); padding: 1px 7px; border-radius: 999px; background: rgba(6, 10, 22, 0.72); border: 1px solid rgba(232, 241, 255, 0.22); white-space: nowrap; }
+.g-label.act5-pt.y { color: var(--result); border-color: rgba(255, 209, 102, 0.45); }
+.g-label.act5-pt.v { color: var(--violet); border-color: rgba(179, 136, 255, 0.5); }
+.g-label.act5-pt.g { color: var(--good); border-color: rgba(61, 220, 132, 0.45); }
+.g-label.act5-pt.dim { opacity: 0.55; }
+.g-label.act5-note { font-size: 12.5px; color: var(--ink-2); padding: 2px 8px; border-radius: 7px; background: rgba(6, 10, 22, 0.7); white-space: nowrap; }
+
+/* dock rows */
+.act5-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 14px; }
+.act5-row .k { color: var(--ink-2); min-width: 64px; }
+.act5-msg { font-size: 13px; color: var(--ink-2); min-height: 18px; line-height: 1.45; }
+.act5-msg.good { color: var(--good); }
+.act5-msg.bad { color: #ffb347; }
+.act5-vecs { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+.act5-vecs .matrix-wrap .mlabel { font-size: 14px; }
+.act5-vecs .cell { width: 52px; height: 34px; }
+.act5-small .cell { width: 52px; height: 34px; }
+.act5-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.act5-chips .btn.on { border-color: var(--accent); background: rgba(89, 225, 255, 0.16); }
+.act5-chips .btn.broken { border-color: rgba(255, 179, 71, 0.6); color: #ffb347; }
+.act5-chips .btn.holds { border-color: rgba(61, 220, 132, 0.5); color: var(--good); }
+.act5-btns { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.act5-sep { border: 0; border-top: 1px solid var(--line); margin: 2px 0; width: 100%; }
+
+/* a worksheet mounted inside a readout */
+.readout .worksheet { min-width: 0; margin-top: 4px; }
+.readout .worksheet .ws-prompt { font-size: 13.5px; }
+
+/* the survivor counter (Ch 16): kept + flattened = columns */
+.act5-counter { display: flex; flex-direction: column; gap: 6px; }
+.act5-counter .bar { display: flex; gap: 4px; }
+.act5-counter .slot { flex: 1; min-width: 34px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 12.5px; border: 1px solid var(--line-2); color: var(--ink-2); background: rgba(255, 255, 255, 0.03); transition: all 0.35s; cursor: default; user-select: none; }
+.act5-counter .slot.kept { background: rgba(255, 209, 102, 0.16); border-color: rgba(255, 209, 102, 0.65); color: var(--result); box-shadow: 0 0 14px -4px rgba(255, 209, 102, 0.8); }
+.act5-counter .slot.flat { background: rgba(179, 136, 255, 0.12); border-color: rgba(179, 136, 255, 0.55); color: var(--violet); }
+.act5-counter .slot.over { border-style: dashed; border-color: rgba(255, 179, 71, 0.7); color: #ffb347; background: rgba(255, 179, 71, 0.06); }
+.act5-counter .slot.click { cursor: pointer; }
+.act5-counter .slot.click:hover { border-color: var(--accent); }
+.act5-counter .sum { font-family: var(--mono); font-size: 14px; color: var(--ink); }
+.act5-counter .sum .k { color: var(--result); } .act5-counter .sum .f { color: var(--violet); }
+.act5-counter .cap { position: relative; height: 0; }
+
+/* the Invertible Matrix constellation (Ch 16 set piece) */
+.act5-stars { display: grid; grid-template-columns: 1fr; gap: 5px; }
+.act5-star { display: grid; grid-template-columns: 18px 1fr; gap: 8px; align-items: start; font-size: 13px; color: var(--ink-2); line-height: 1.35; }
+.act5-star .dot { width: 12px; height: 12px; margin-top: 3px; border-radius: 50%; border: 1.5px solid var(--line-2); transition: all 0.5s; }
+.act5-star.lit { color: var(--ink); }
+.act5-star.lit .dot { background: #e8f1ff; border-color: #fff; box-shadow: 0 0 10px 2px rgba(232, 241, 255, 0.75); }
+.act5-sky { width: 100%; height: 150px; display: block; }
+.act5-sky circle { transition: all 0.6s; }
+.act5-sky line { transition: stroke-opacity 0.8s; }
+
+/* a tiny plot of a strut bend profile (Ch 16 p5) */
+.act5-plot { width: 100%; height: 120px; display: block; }
+.act5-plot .ax { stroke: rgba(143, 184, 232, 0.45); stroke-width: 1; }
+.act5-plot .p { fill: none; stroke: #3ddc84; stroke-width: 2.2; }
+.act5-plot .d { fill: none; stroke: #ffd166; stroke-width: 2.2; stroke-dasharray: 5 4; }
+
+/* LANTERN's corner display (the low point) */
+.act5-corner { position: absolute; right: 26px; bottom: 26px; font-family: var(--mono); font-size: 13px; color: #59e1ff; padding: 8px 12px; border-radius: 8px; background: rgba(4, 10, 20, 0.66); border: 1px solid rgba(89, 225, 255, 0.35); letter-spacing: 0.02em; opacity: 0; transition: opacity 1.2s; pointer-events: none; }
+.act5-corner.on { opacity: 1; }
+.act5-panel { position: absolute; right: 24px; top: 24px; width: min(360px, 36vw); padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; pointer-events: none; }
+.act5-panel .line { font-size: 13.5px; color: var(--ink-2); }
+.act5-panel .line b { color: var(--ink); font-family: var(--mono); font-weight: 600; }

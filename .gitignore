@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.DS_Store
+__pycache__/
+*.pyc
+test-results/
+shots/
+*.log
+voice-cache/
+site/public/singular/pyodide/
+tests/_tmp-*.mjs

@@ -1,0 +1,58 @@
+/* Chapter 17 (Act VI · The Wrong Grid): chapter-local styles, scoped by c17- classes. */
+
+/* point tags in the scene */
+.g-label.c17-pt { font-family: var(--mono); font-size: 12.5px; font-weight: 600; color: var(--ink); padding: 1px 7px; border-radius: 999px; background: rgba(6, 10, 22, 0.74); border: 1px solid rgba(232, 241, 255, 0.22); white-space: nowrap; }
+.g-label.c17-pt.y { color: var(--result); border-color: rgba(255, 209, 102, 0.45); }
+.g-label.c17-pt.cu { color: #ef9a5c; border-color: rgba(239, 154, 92, 0.55); }
+.g-label.c17-pt.g { color: var(--good); border-color: rgba(61, 220, 132, 0.45); }
+.g-label.c17-pt.r { color: var(--bad); border-color: rgba(255, 92, 108, 0.45); }
+.g-label.c17-pt.vell { color: #efe2c4; border-color: rgba(239, 226, 196, 0.45); }
+.g-label.c17-pt.dim { opacity: 0.6; }
+.g-label.c17-cap { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-2); white-space: nowrap; padding: 2px 9px; border-radius: 6px; background: rgba(6, 10, 22, 0.6); }
+.g-label.c17-cap.cu { color: #ef9a5c; }
+.g-label.c17-stage { font-size: 14px; font-weight: 600; color: var(--ink); white-space: nowrap; padding: 4px 12px; border-radius: 8px; background: rgba(6, 10, 22, 0.78); border: 1px solid rgba(239, 154, 92, 0.45); }
+
+/* dock rows */
+.c17-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 14px; }
+.c17-row .k { color: var(--ink-2); }
+.c17-msg { font-size: 13px; color: var(--ink-2); min-height: 18px; line-height: 1.45; max-width: 460px; }
+.c17-msg.good { color: var(--good); }
+.c17-msg.bad { color: #ffb347; }
+.c17-btns { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.c17-cu { color: #ef9a5c; }
+.c17-in .cell { width: 54px; height: 34px; }
+
+/* the three-slot rail: back to the ship's grid · the spire numbers · into the Anchor's grid · x */
+.c17-rail { display: flex; flex-direction: column; gap: 8px; }
+.c17-palette { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.c17-track { display: flex; align-items: stretch; gap: 6px; padding: 8px 10px; border-radius: 12px; background: rgba(4, 8, 18, 0.55); border: 1px dashed rgba(160, 190, 230, 0.28); }
+.c17-slot { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 104px; }
+.c17-slot .lab { font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); text-align: center; line-height: 1.25; max-width: 112px; }
+.c17-slot.cu .lab { color: #ef9a5c; }
+.c17-slot .hole { min-height: 62px; min-width: 84px; display: flex; align-items: center; justify-content: center; border-radius: 10px; border: 1px dashed rgba(160, 190, 230, 0.3); color: var(--muted); font-size: 12px; }
+.c17-slot.playing .c17-card, .c17-slot.playing .hole { border-color: var(--result); box-shadow: 0 0 0 2px rgba(255, 209, 102, 0.28); }
+.c17-card { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 5px 8px; border-radius: 10px; min-width: 70px; background: rgba(16, 24, 42, 0.92); border: 1px solid rgba(160, 190, 230, 0.22); color: var(--ink); font: inherit; cursor: pointer; }
+.c17-card .n { font-size: 11px; letter-spacing: 0.04em; color: var(--ink-2); white-space: nowrap; }
+.c17-card .m { font-size: 13px; }
+.c17-card.used { opacity: 0.35; }
+.c17-card.fixed { cursor: default; }
+.c17-card.cu { border-color: rgba(239, 154, 92, 0.55); }
+.c17-x { align-self: center; font-family: var(--mono); color: var(--ink-2); padding: 0 2px 0 4px; }
+.c17-order { font-size: 12px; color: var(--muted); }
+
+/* the measurement table (p6) */
+.c17-meas { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; gap: 6px 10px; align-items: center; font-size: 13.5px; }
+.c17-meas > .btn { justify-content: flex-start; text-align: left; padding: 4px 10px; font-size: 13px; }
+.c17-meas .h { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.c17-meas .v { font-family: var(--mono); font-size: 13px; text-align: center; min-width: 54px; }
+.c17-meas .v.cu { color: #ef9a5c; }
+.c17-meas .marks { display: flex; gap: 4px; }
+.c17-meas .marks .btn { padding: 3px 8px; font-size: 12px; }
+.c17-meas .marks .btn.on.same { border-color: var(--good); color: var(--good); background: rgba(61, 220, 132, 0.12); }
+.c17-meas .marks .btn.on.diff { border-color: rgba(255, 179, 71, 0.7); color: #ffb347; background: rgba(255, 179, 71, 0.08); }
+.c17-meas .lbl { color: var(--ink-2); }
+.c17-meas .lbl.lit { color: var(--good); }
+
+/* the set piece checklist */
+.c17-checks { display: flex; flex-direction: column; gap: 4px; font-size: 13.5px; }
+.c17-checks .ok { color: var(--good); }

@@ -1,0 +1,89 @@
+/* Act VII · Lines That Hold (Chapters 18–20): chapter-local styles, scoped by a7- classes. */
+
+/* point and line tags in the scene */
+.g-label.a7-tag { font-family: var(--mono); font-size: 12.5px; font-weight: 600; color: var(--ink); padding: 1px 7px; border-radius: 999px; background: rgba(6, 10, 22, 0.76); border: 1px solid rgba(232, 241, 255, 0.22); white-space: nowrap; }
+.g-label.a7-tag.y { color: var(--result); border-color: rgba(255, 209, 102, 0.45); }
+.g-label.a7-tag.g { color: var(--v); border-color: rgba(61, 220, 132, 0.45); }
+.g-label.a7-tag.r { color: var(--w); border-color: rgba(255, 92, 108, 0.45); }
+.g-label.a7-tag.b { color: var(--u); border-color: rgba(77, 163, 255, 0.5); }
+.g-label.a7-tag.vi { color: var(--violet); border-color: rgba(179, 136, 255, 0.5); }
+.g-label.a7-tag.o { color: var(--orange); border-color: rgba(255, 159, 67, 0.5); }
+.g-label.a7-tag.dim { opacity: 0.62; }
+.g-label.a7-cap { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-2); white-space: nowrap; padding: 2px 9px; border-radius: 6px; background: rgba(6, 10, 22, 0.62); }
+.g-label.a7-board { font-size: 15px; color: var(--ink); white-space: nowrap; padding: 8px 14px; border-radius: 10px; background: rgba(6, 10, 22, 0.82); border: 1px solid rgba(160, 190, 230, 0.25); }
+.g-label.a7-board.step { font-size: 14px; color: var(--accent); border-color: rgba(89, 225, 255, 0.35); max-width: 560px; white-space: normal; text-align: center; }
+
+/* dock rows */
+.a7-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 14px; }
+.a7-row .k { color: var(--ink-2); }
+.a7-msg { font-size: 13px; color: var(--ink-2); min-height: 18px; line-height: 1.45; max-width: 470px; }
+.a7-msg.good { color: var(--good); }
+.a7-msg.bad { color: #ffb347; }
+.a7-btns { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.a7-in .cell { width: 58px; height: 34px; }
+.a7-num { width: 74px; }
+.a7-kick { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+
+/* locked lines (the line hunt) */
+.a7-locks { display: flex; flex-direction: column; gap: 6px; }
+.a7-lock { display: flex; align-items: center; gap: 10px; font-size: 13.5px; padding: 4px 8px; border-radius: 9px; background: rgba(179, 136, 255, 0.08); border: 1px solid rgba(179, 136, 255, 0.3); }
+.a7-lock .d { font-family: var(--mono); color: var(--violet); min-width: 104px; }
+.a7-lock.ok { border-color: rgba(61, 220, 132, 0.55); background: rgba(61, 220, 132, 0.08); }
+.a7-lock .s { color: var(--ink-2); }
+.a7-lock input.cell { width: 64px; height: 30px; }
+.a7-lock .st { font-size: 12.5px; color: var(--ink-2); }
+.a7-lock.ok .st { color: var(--good); }
+
+/* the characteristic polynomial plot */
+.a7-plot { display: block; width: 100%; height: auto; }
+.a7-plot .axis { stroke: rgba(160, 190, 230, 0.45); stroke-width: 1; }
+.a7-plot .grid { stroke: rgba(160, 190, 230, 0.12); stroke-width: 1; }
+.a7-plot .curve { fill: none; stroke: var(--result); stroke-width: 2; }
+.a7-plot .dot { fill: var(--accent); }
+.a7-plot .root { fill: var(--violet); }
+.a7-plot .tick { fill: var(--muted); font-size: 10px; font-family: var(--mono); }
+.a7-plot .lab { fill: var(--ink-2); font-size: 11px; }
+
+/* the rail (cards act right to left) */
+.a7-rail { display: flex; flex-direction: column; gap: 8px; }
+.a7-palette { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.a7-track { display: flex; align-items: stretch; gap: 6px; padding: 8px 10px; border-radius: 12px; min-height: 66px; background: rgba(4, 8, 18, 0.55); border: 1px dashed rgba(160, 190, 230, 0.28); flex-wrap: wrap; }
+.a7-track .empty { align-self: center; color: var(--muted); font-size: 13px; padding: 0 6px; }
+.a7-card { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 5px 8px; border-radius: 10px; min-width: 64px; background: rgba(16, 24, 42, 0.92); border: 1px solid rgba(160, 190, 230, 0.22); color: var(--ink); font: inherit; cursor: pointer; }
+.a7-card .n { font-size: 11px; letter-spacing: 0.04em; color: var(--ink-2); white-space: nowrap; }
+.a7-card .m { font-size: 13px; }
+.a7-card.playing { border-color: var(--result); box-shadow: 0 0 0 2px rgba(255, 209, 102, 0.28); }
+.a7-card.gone { opacity: 0.25; }
+.a7-card.id { border-color: rgba(61, 220, 132, 0.6); }
+.a7-x { align-self: center; font-family: var(--mono); color: var(--ink-2); padding: 0 2px 0 4px; }
+.a7-order { font-size: 12px; color: var(--muted); }
+
+/* bars (the flow board and forecasts) */
+.a7-bars { display: grid; grid-template-columns: auto 1fr auto; gap: 6px 10px; align-items: center; font-size: 13px; }
+.a7-bars .nm { color: var(--ink-2); }
+.a7-bars .bar { height: 10px; border-radius: 5px; background: rgba(160, 190, 230, 0.12); position: relative; overflow: hidden; }
+.a7-bars .bar > span { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 5px; background: var(--result); transition: width 0.25s; }
+.a7-bars .bar > i { position: absolute; top: -2px; bottom: -2px; width: 2px; background: var(--accent); }
+.a7-bars .val { font-family: var(--mono); color: var(--ink); min-width: 56px; text-align: right; }
+
+/* a short checklist (set piece, multi-stage puzzles) */
+.a7-checks { display: flex; flex-direction: column; gap: 4px; font-size: 13.5px; }
+.a7-checks .ok { color: var(--good); }
+
+/* the ranking strip (PageRank) */
+.a7-rank { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.a7-rank .slot { min-width: 40px; text-align: center; padding: 4px 8px; border-radius: 8px; border: 1px dashed rgba(160, 190, 230, 0.35); font-family: var(--mono); color: var(--ink); }
+.a7-rank .slot.on { border-style: solid; border-color: var(--result); }
+
+/* Chapter 20: column sums under the transition matrix */
+.c20-sums { font-size: 12.5px; gap: 8px; }
+.c20-sum { font-family: var(--mono); padding: 1px 7px; border-radius: 7px; border: 1px solid rgba(255, 159, 67, 0.45); color: #ffb347; }
+.c20-sum.ok { border-color: rgba(61, 220, 132, 0.5); color: var(--good); }
+.a7-btns .btn.on { border-color: var(--violet); color: var(--violet); }
+
+/* the line hunt's test log (typed arrows): every test with its numbers, newest first */
+.a7-log { display: flex; flex-direction: column; gap: 4px; }
+.a7-log:empty { display: none; }
+.a7-logrow { font-size: 13px; color: var(--ink-2); padding: 3px 8px; border-radius: 7px; background: rgba(255, 255, 255, 0.03); }
+.a7-logrow.hit { color: var(--ink); background: rgba(179, 136, 255, 0.1); }
+.a7-logrow b, .a7-logrow strong { color: var(--violet); font-weight: 600; }

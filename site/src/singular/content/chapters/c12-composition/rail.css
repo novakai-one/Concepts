@@ -1,0 +1,23 @@
+/* The sequence rail (Chapter 12): cards dropped right to left; the right-hand card acts first. */
+.c12-rail { display: flex; flex-direction: column; gap: 8px; }
+.c12-palette { display: flex; flex-wrap: wrap; gap: 6px; }
+.c12-palette .c12-card { cursor: grab; }
+.c12-track { display: flex; align-items: stretch; gap: 6px; padding: 8px 10px; border-radius: 12px; min-height: 74px;
+  background: rgba(4, 8, 18, 0.55); border: 1px dashed var(--line-2, rgba(160, 190, 230, 0.28)); }
+.c12-track.over { border-color: var(--accent, #59e1ff); }
+.c12-track .c12-empty { align-self: center; color: var(--muted, #7d8aa5); font-size: 13px; padding: 0 6px; }
+.c12-card { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 5px 8px; border-radius: 10px; min-width: 64px;
+  background: rgba(16, 24, 42, 0.92); border: 1px solid rgba(160, 190, 230, 0.22); color: var(--ink, #e8f1ff); font: inherit; }
+.c12-card .n { font-size: 11px; letter-spacing: 0.04em; color: var(--ink-2, #b6c3dc); white-space: nowrap; }
+.c12-card .m { font-size: 13px; }
+.c12-card.playing { border-color: var(--result, #ffd166); box-shadow: 0 0 0 2px rgba(255, 209, 102, 0.28); }
+.c12-card.fused { border-color: rgba(255, 209, 102, 0.6); }
+.c12-track .c12-card { cursor: pointer; }
+.c12-track.locked .c12-card { cursor: default; }
+.c12-x { align-self: center; font-family: var(--mono, monospace); color: var(--ink-2, #b6c3dc); padding: 0 2px 0 4px; }
+.c12-arrow { align-self: center; color: var(--muted, #7d8aa5); font-size: 12px; white-space: nowrap; }
+.c12-fuse { align-self: center; padding: 2px 6px; border-radius: 8px; border: 1px solid rgba(255, 209, 102, 0.45); background: rgba(255, 209, 102, 0.08);
+  color: var(--result, #ffd166); font-size: 12px; cursor: pointer; }
+.c12-fuse:hover { background: rgba(255, 209, 102, 0.18); }
+.c12-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.c12-order { font-size: 12px; color: var(--muted, #7d8aa5); }

@@ -1,0 +1,92 @@
+/* Act III (The Ledger): chapter-local styles for Chapters 8–10. Scoped by c08- / c09- / c10- classes. */
+
+/* a marker's coordinates tag */
+.g-label.c08-tag { font-family: var(--mono); font-size: 12.5px; font-weight: 600; color: var(--ink); padding: 1px 7px; border-radius: 999px; background: rgba(6, 10, 22, 0.72); border: 1px solid rgba(232, 241, 255, 0.25); white-space: nowrap; }
+.g-label.c08-tag.on { color: var(--result); border-color: rgba(255, 209, 102, 0.5); }
+
+/* an equation label whose plane the marker is on */
+.g-label.rob-eq.c08-on { box-shadow: 0 0 0 1px currentColor, 0 0 18px -4px currentColor; background: rgba(6, 10, 22, 0.86); }
+.g-label.rob-eq.c08-on::after { content: ' ✓'; font-weight: 700; }
+
+/* panel captions in the twin view */
+.g-label.c08-cap { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-2); white-space: nowrap; }
+.g-label.c08-cap b { color: var(--ink); font-weight: 600; letter-spacing: 0.08em; }
+.g-label.c08-eqn { font-size: 15px; padding: 3px 10px; border-radius: 8px; background: rgba(6, 10, 22, 0.78); border: 1px solid rgba(255, 255, 255, 0.12); white-space: nowrap; }
+.g-label.c08-pt { font-family: var(--mono); font-size: 13px; font-weight: 600; color: var(--result); padding: 1px 8px; border-radius: 999px; background: rgba(6, 10, 22, 0.75); border: 1px solid rgba(255, 209, 102, 0.4); white-space: nowrap; }
+.g-label.c08-pt.off { color: var(--ink); border-color: rgba(232, 241, 255, 0.25); }
+
+/* typed placement */
+.c08-place { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.c08-place-k { font-size: 13px; color: var(--ink-2); min-width: 70px; }
+.c08-hint { font-size: 12.5px; color: var(--muted); line-height: 1.4; }
+
+/* per-plane "how far off" rows in a readout */
+.c08-off { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; font-size: 14px; align-items: baseline; }
+.c08-off .k .katex { font-size: 1em; }
+.c08-off .v { font-family: var(--mono); font-size: 13.5px; text-align: right; }
+.c08-off .v.ok { color: var(--good); }
+
+/* the hidden-answer mode for board puzzles where the player reads the point (Ch 9) */
+.c09-hide-sol .g-label.rob-sol { display: none; }
+/* terms not yet earned: hide the board's status chips (Ch 9 p1, Ch 10 p1) */
+.rob.c09-nochips .rob-chips { visibility: hidden; }
+.rob.c10-norref .rob-chip:nth-child(2) { visibility: hidden; }
+
+/* generator lamps (Ch 9) */
+.c09-gens { display: flex; gap: 10px; }
+.c09-gen { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 6px 8px; border-radius: 10px; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.02); transition: all 0.5s; }
+.c09-gen .lamp { width: 18px; height: 18px; border-radius: 50%; background: #2a3140; box-shadow: inset 0 0 4px #000; transition: all 0.6s; }
+.c09-gen .gk { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.c09-gen .gv { font-family: var(--mono); font-size: 15px; color: var(--ink-2); }
+.c09-gen.on { border-color: rgba(255, 209, 102, 0.55); background: rgba(255, 209, 102, 0.07); }
+.c09-gen.on .lamp { background: var(--result); box-shadow: 0 0 14px 3px rgba(255, 209, 102, 0.7), inset 0 0 3px #fff; }
+.c09-gen.on .gv { color: var(--result); }
+
+/* a small matrix for the sandbox and the by-hand board */
+.c09-mat { display: inline-grid; gap: 2px 14px; padding: 6px 12px; border-left: 2px solid var(--ink-2); border-right: 2px solid var(--ink-2); border-radius: 6px; font-family: var(--mono); font-size: 16px; }
+.c09-mat .bar { border-left: 1.5px solid var(--ink-2); padding-left: 12px; }
+.c09-mat span { text-align: right; min-width: 26px; transition: color 0.4s; }
+.c09-mat .r0 { color: #3ddc84; } .c09-mat .r1 { color: #ff5c6c; } .c09-mat .r2 { color: #4da3ff; }
+.c09-mat .bad { color: var(--bad); text-decoration: line-through; }
+.c09-btns { display: flex; flex-wrap: wrap; gap: 6px; }
+.c09-btns .btn.done { border-color: rgba(61, 220, 132, 0.55); color: var(--good); }
+.c09-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 14px; }
+.c09-row select, .c09-row input.cell { font-size: 14px; }
+.c09-msg { font-size: 13px; color: var(--ink-2); min-height: 18px; line-height: 1.4; }
+.c09-msg.bad { color: var(--bad); }
+.c09-msg.good { color: var(--good); }
+
+/* pipes (Ch 10) */
+.c10-pipes { display: flex; flex-direction: column; gap: 8px; }
+.c10-pipe { display: grid; grid-template-columns: 34px 1fr 54px; align-items: center; gap: 8px; font-size: 14px; }
+.c10-pipe .bar { position: relative; height: 10px; border-radius: 5px; background: rgba(255, 255, 255, 0.06); overflow: hidden; }
+.c10-pipe .fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 5px; background: var(--good); transition: width 0.15s, background 0.3s; }
+.c10-pipe.over .fill { background: #ffb347; }
+.c10-pipe .pv { font-family: var(--mono); font-size: 13px; text-align: right; }
+.c10-pipe.over .pv { color: #ffb347; }
+.c10-cols { display: flex; gap: 6px; }
+.c10-cols .btn.picked { border-color: rgba(255, 209, 102, 0.6); color: var(--result); }
+.c10-meters { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; align-items: center; font-size: 14px; }
+.c10-step { display: inline-flex; align-items: center; gap: 6px; }
+.c10-step .btn { min-width: 30px; padding: 2px 8px; }
+.c10-step .sv { font-family: var(--mono); min-width: 28px; text-align: center; }
+
+/* a read-only board (Ch 9 p2): no step list or key help */
+.rob.c09-static .rob-foot, .rob.c09-static .rob-help { display: none; }
+.c09-hand { display: flex; flex-direction: column; gap: 8px; }
+.c09-hand select.law-slot { min-width: 0; }
+/* LANTERN's run of a Procedure: the board sits top right, the caption under it */
+.dock.c09-procdock { left: auto; bottom: auto; right: 20px; top: 76px; max-width: min(520px, calc(100vw - 40px)); }
+.c09-caption { font-size: 14px; color: var(--ink); min-height: 20px; line-height: 1.45; }
+.c09-caption b { color: #59e1ff; font-weight: 600; }
+
+/* Teo's note in the empty pod (end of Act III) */
+.g-label.c10-note { font-family: Georgia, 'Times New Roman', serif; font-size: 17px; color: #f3ead8; padding: 8px 14px; border-radius: 4px; background: rgba(40, 34, 24, 0.82); border: 1px solid rgba(243, 234, 216, 0.25); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5); max-width: 360px; white-space: normal; text-align: center; transform: rotate(-1.5deg); }
+/* Ch 8 p5: a compact worksheet (three rows and four columns) */
+.worksheet.c08-tanks .ws-steps { gap: 4px; }
+.worksheet.c08-tanks .ws-row { padding: 3px 8px; }
+.worksheet.c08-tanks .ws-grid { gap: 2px; }
+.worksheet.c08-tanks .ws-cell { width: 50px; height: 26px; font-size: 14px; }
+.worksheet.c08-tanks .ws-bracket { padding: 2px 8px; }
+/* Ch 9 Procedure: while LANTERN runs the tiles, the tile panel sits left of the board */
+.brief.procedure.c09-aside { left: 20px; transform: none; width: min(820px, calc(100vw - 580px)); }

@@ -1,0 +1,49 @@
+/* Act VIII · Shadows (Chapters 21–23): chapter-local styles, scoped by a8- classes. */
+
+/* point tags in the scene */
+.g-label.a8-pt { font-family: var(--mono); font-size: 12.5px; font-weight: 600; color: var(--ink); padding: 1px 7px; border-radius: 999px; background: rgba(6, 10, 22, 0.74); border: 1px solid rgba(232, 241, 255, 0.22); white-space: nowrap; pointer-events: none; }
+.g-label.a8-pt.y { color: var(--result); border-color: rgba(255, 209, 102, 0.45); }
+.g-label.a8-pt.g { color: var(--good); border-color: rgba(61, 220, 132, 0.45); }
+.g-label.a8-pt.r { color: var(--bad); border-color: rgba(255, 92, 108, 0.45); }
+.g-label.a8-pt.b { color: var(--u); border-color: rgba(77, 163, 255, 0.45); }
+.g-label.a8-pt.o { color: var(--orange); border-color: rgba(255, 159, 67, 0.5); }
+.g-label.a8-pt.v { color: var(--violet); border-color: rgba(179, 136, 255, 0.5); }
+.g-label.a8-pt.c { color: var(--accent); border-color: rgba(89, 225, 255, 0.45); }
+.g-label.a8-pt.dim { opacity: 0.62; }
+.g-label.a8-cap { font-size: 11.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-2); white-space: nowrap; padding: 2px 9px; border-radius: 6px; background: rgba(6, 10, 22, 0.6); pointer-events: none; }
+
+/* dock rows */
+.a8-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 14px; }
+.a8-row .k { color: var(--ink-2); }
+.a8-msg { font-size: 13px; color: var(--ink-2); min-height: 18px; line-height: 1.45; max-width: 470px; }
+.a8-msg.good { color: var(--good); }
+.a8-msg.bad { color: #ffb347; }
+.a8-btns { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.a8-in .cell { width: 74px; height: 34px; }
+.a8-note { font-size: 12.5px; color: var(--muted); line-height: 1.45; max-width: 470px; }
+
+/* a meter (static level, star roundness) */
+.a8-meter { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--ink-2); }
+.a8-meter .bar { position: relative; width: 150px; height: 8px; border-radius: 999px; background: rgba(140, 180, 255, 0.14); overflow: hidden; }
+.a8-meter .bar span { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 999px; background: var(--accent); transition: width 0.5s ease; }
+.a8-meter .bar.warn span { background: var(--orange); }
+
+/* selectable cards (safe moves) */
+.a8-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; max-width: 520px; }
+.a8-card { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 7px 6px 6px; border-radius: 10px; background: rgba(16, 24, 42, 0.9); border: 1px solid rgba(160, 190, 230, 0.22); color: var(--ink); font: inherit; cursor: pointer; }
+.a8-card:hover { border-color: rgba(160, 190, 230, 0.5); }
+.a8-card.on { border-color: var(--result); box-shadow: 0 0 0 2px rgba(255, 209, 102, 0.25); }
+.a8-card.seen { background: rgba(22, 32, 56, 0.95); }
+.a8-card .m { font-size: 13px; }
+.a8-card .pin { font-size: 11px; letter-spacing: 0.04em; color: var(--muted); padding: 1px 8px; border-radius: 999px; border: 1px solid rgba(160, 190, 230, 0.25); }
+.a8-card .pin.on { color: var(--good); border-color: rgba(61, 220, 132, 0.6); }
+
+/* the twin view: a small fit board drawn as SVG in the dock */
+.a8-board { display: block; width: 300px; height: 170px; border-radius: 10px; background: rgba(4, 8, 18, 0.6); border: 1px solid rgba(160, 190, 230, 0.18); }
+.a8-board text { font-family: var(--mono); font-size: 10px; fill: var(--muted); }
+.a8-board .t { fill: var(--ink-2); font-size: 10.5px; }
+
+@media (max-width: 760px) {
+  .a8-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .a8-board { width: 240px; height: 140px; }
+}

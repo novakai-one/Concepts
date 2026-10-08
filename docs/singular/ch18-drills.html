@@ -1,0 +1,1390 @@
+<title>Eigen Drills</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600&family=STIX+Two+Text:ital,wght@1,500&display=swap">
+<style>
+/* Layout. Phone: drill tabs, the task, the picture (it takes the free height), the answer, the feedback, then a dock pinned to the bottom with the buttons and number pad.
+   Wide screens and phones on their side: picture on the left; a right-hand panel with the task, answer and feedback scrolls on its own, with the dock pinned to its bottom. */
+/* The game's own look, dark only by choice: space-black ground, cyan accent. Maths colours: green = x, yellow = Ax, violet = a kept line. */
+:root {
+  color-scheme: dark;
+  --bg: #05070f;
+  --surface: #0b1122;
+  --surface-2: #121c36;
+  --line: rgba(140, 180, 255, 0.16);
+  --line-2: rgba(140, 180, 255, 0.32);
+  --ink: #e8f1ff;
+  --ink-2: #b8c4da;
+  --muted: #7d8aa5;
+  --accent: #59e1ff;
+  --accent-ink: #031018;
+  --accent-tint: rgba(89, 225, 255, 0.12);
+  --green: #3ddc84;
+  --yellow: #ffd166;
+  --violet: #b388ff;
+  --violet-tint: rgba(179, 136, 255, 0.13);
+  --bad: #ff7a85;
+  --bad-tint: rgba(255, 122, 133, 0.1);
+  --grid: #13274d;
+  --axis: #3c659f;
+  --scene: #060a16;
+  --display: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  --text: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
+  --math: 'STIX Two Text', 'Times New Roman', Georgia, serif;
+}
+[hidden] { display: none !important; }
+html { height: 100%; box-sizing: border-box; background: var(--bg); }
+*, *::before, *::after { box-sizing: inherit; }
+body { height: 100%; margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 var(--text); padding: 0 16px; -webkit-tap-highlight-color: transparent; }
+button { font: inherit; color: inherit; touch-action: manipulation; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.app { min-height: 100%; max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 8px; padding-top: 8px; }
+
+/* header: a short title and the three drills */
+.top { display: flex; flex-direction: column; gap: 6px; }
+.brand { display: flex; align-items: baseline; gap: 8px; line-height: 1.2; }
+.brand .kick { font: 600 11px var(--text); letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); }
+.brand .name { font: 600 13px var(--display); color: var(--ink-2); }
+.tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 3px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.tab { border: 0; background: transparent; border-radius: 9px; min-height: 44px; padding: 0 6px; font-size: 14px; font-weight: 500; color: var(--ink-2); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; }
+.tab .n { font: 600 12px var(--mono); color: var(--muted); }
+.tab .ck { color: var(--accent); font-size: 12px; }
+.tab[aria-selected="true"] { background: var(--surface-2); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line-2); }
+.tab[aria-selected="true"] .n { color: var(--accent); }
+
+/* the play area */
+.stage { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 10px; }
+.panel { display: contents; }
+.task { order: 1; display: flex; flex-direction: column; gap: 6px; }
+.visual { order: 2; flex: 1 1 0; min-height: 150px; display: flex; flex-direction: column; }
+.controls { order: 3; }
+.feedback { order: 4; }
+.dock { order: 5; position: sticky; bottom: 0; z-index: 5; margin: auto -16px 0; padding: 8px 16px calc(8px + env(safe-area-inset-bottom, 0px)); background: var(--bg); border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 6px; }
+.stage[data-phase="why"] .visual, .stage[data-phase="done"] .visual { flex: 1 0 auto; }
+.visual.idle { display: none; }
+.visual.has-tiles { min-height: auto; }
+
+.meta { display: flex; align-items: center; gap: 6px 10px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+.meta .again { color: var(--violet); font-weight: 500; }
+.meta .step { margin-left: auto; color: var(--ink-2); }
+.dots { display: flex; gap: 4px; flex-wrap: wrap; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--line-2); }
+.dot.ok { background: var(--accent); }
+.dot.help { background: transparent; box-shadow: inset 0 0 0 1.5px var(--accent); }
+.dot.miss { background: var(--bad); }
+.dot.now { background: var(--ink); box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px var(--ink); }
+.pips { margin-left: auto; display: flex; align-items: center; gap: 5px; color: var(--ink-2); }
+.pip { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--line-2); }
+.pip.on { background: var(--accent); border-color: var(--accent); }
+.taskrow { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.tasktext { min-width: 0; }
+.tasktext h1 { margin: 0; font: 600 17px/1.3 var(--display); text-wrap: balance; }
+.tasktext p { margin: 3px 0 0; font-size: 13.5px; color: var(--ink-2); text-wrap: pretty; }
+.legend { display: none; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); }
+.legend > span { display: inline-flex; align-items: center; gap: 6px; }
+.sw { width: 16px; height: 3px; border-radius: 2px; }
+.sw.g { background: var(--green); }
+.sw.y { background: var(--yellow); }
+.sw.v { background: var(--violet); }
+.sw.d { background: repeating-linear-gradient(90deg, var(--green) 0 4px, transparent 4px 7px); }
+
+/* maths type: vectors are always columns */
+.mi { font-family: var(--math); font-style: italic; font-weight: 500; font-size: 1.14em; white-space: nowrap; }
+.nw { white-space: nowrap; }
+.amat { display: inline-flex; align-items: center; gap: 7px; flex-shrink: 0; font-size: 15px; }
+.mat, .cv { display: inline-grid; font: 500 15px/1.3 var(--mono); padding: 2px 7px; border-left: 2px solid var(--ink-2); border-right: 2px solid var(--ink-2); border-radius: 7px; text-align: center; vertical-align: middle; }
+.mat { grid-template-columns: auto auto; column-gap: 12px; }
+.cv { grid-template-columns: auto; }
+.cv.in { font-size: 0.8em; line-height: 1.12; padding: 0 4px; border-width: 1.5px; border-radius: 5px; margin: 1px 1px; }
+.cv.sm { font-size: 12px; line-height: 1.2; padding: 1px 5px; border-width: 1.5px; }
+.cv.md { font-size: 16px; }
+.cv.lg { font-size: 19px; padding: 3px 9px; }
+.cv.g { color: var(--green); border-color: var(--green); }
+.cv.y { color: var(--yellow); border-color: var(--yellow); }
+
+/* the picture */
+.scene { flex: 1; width: 100%; min-height: 0; display: block; border-radius: 14px; border: 1px solid var(--line); background: var(--scene); }
+.grid line { stroke: var(--grid); }
+.axes line { stroke: var(--axis); }
+.arw line { stroke-linecap: round; }
+.arw.g line { stroke: var(--green); }
+.arw.g polygon { fill: var(--green); }
+.arw.y line { stroke: var(--yellow); }
+.arw.y polygon { fill: var(--yellow); }
+.ln.dash { stroke: var(--green); }
+.ln.found { stroke: var(--violet); }
+.dot-y { fill: var(--yellow); }
+.lbl { paint-order: stroke; stroke: var(--scene); stroke-linejoin: round; }
+.lbl.g { fill: var(--green); font-family: var(--math); font-style: italic; }
+.lbl.y { fill: var(--yellow); font-family: var(--math); font-style: italic; }
+.lbl.v { fill: var(--violet); font-family: var(--mono); }
+
+/* drill 1: five tiles and "None of these" */
+.tiles { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(min-content, 1fr)); gap: 8px; }
+.tile { position: relative; min-width: 0; min-height: 0; display: flex; flex-direction: column; align-items: stretch; justify-content: center; gap: 4px; padding: 28px 6px 8px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--scene); cursor: pointer; text-align: center; }
+.tile:hover:not(:disabled) { border-color: var(--line-2); }
+.tile[aria-pressed="true"] { border-color: var(--violet); background: var(--violet-tint); }
+.tile:disabled { cursor: default; }
+.tile.right { border-color: var(--accent); background: var(--scene); }
+.tile.wrong { border-color: var(--bad); background: var(--bad-tint); }
+.tile.answer { border-color: var(--accent); border-style: dashed; background: var(--scene); }
+.tile svg { flex: 1 1 0; min-height: 36px; width: 100%; display: block; }
+.tile .tick { position: absolute; top: 7px; left: 7px; width: 22px; height: 22px; border-radius: 6px; border: 1.5px solid var(--line-2); display: grid; place-items: center; font-size: 13px; font-weight: 700; color: var(--accent-ink); background: var(--scene); }
+.tile[aria-pressed="true"] .tick { background: var(--violet); border-color: var(--violet); }
+.tile.answer .tick { background: transparent; border-style: dashed; border-color: var(--accent); color: var(--accent); }
+.tile .mark { position: absolute; top: 5px; right: 9px; font-weight: 700; font-size: 16px; }
+.tile.right .mark { color: var(--accent); }
+.tile.wrong .mark { color: var(--bad); }
+.cap { flex: none; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 4px 6px; font-size: 13px; color: var(--ink-2); }
+.tile.nums .cap { flex: 1 1 auto; font-size: 15px; }
+.pair { display: inline-grid; grid-template-columns: auto auto auto; align-items: center; justify-items: center; column-gap: 6px; row-gap: 2px; }
+.pair .pl { font-size: 12px; color: var(--muted); }
+.pair .arrow { color: var(--muted); }
+.reason { flex: none; font-size: 11.5px; line-height: 1.25; color: var(--ink-2); }
+.tile.wrong .reason { color: var(--ink); }
+.none-txt { flex: 1 1 auto; display: grid; place-items: center; font: 600 15px/1.25 var(--display); color: var(--ink-2); }
+
+/* end-of-drill question and summary */
+.card { flex: 1; display: flex; flex-direction: column; gap: 12px; padding: 16px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); }
+.card h2 { margin: 0; font: 600 17px/1.35 var(--display); text-wrap: balance; }
+.card p { margin: 0; color: var(--ink-2); max-width: 62ch; }
+.stmts { display: flex; flex-direction: column; gap: 8px; }
+.stmt { position: relative; display: flex; align-items: flex-start; gap: 12px; text-align: left; min-height: 48px; padding: 11px 36px 11px 12px; border-radius: 11px; border: 1px solid var(--line-2); background: var(--scene); cursor: pointer; }
+.stmt:disabled { cursor: default; }
+.stmt .box { flex: none; width: 22px; height: 22px; margin-top: 1px; border-radius: 6px; border: 1.5px solid var(--line-2); display: grid; place-items: center; font-size: 13px; font-weight: 700; color: var(--accent-ink); }
+.stmt[aria-pressed="true"] { border-color: var(--violet); }
+.stmt[aria-pressed="true"] .box { background: var(--violet); border-color: var(--violet); }
+.stmt .st { display: flex; flex-direction: column; gap: 4px; }
+.stmt .sw-why { font-size: 13px; color: var(--ink-2); }
+.stmt .mark { position: absolute; top: 11px; right: 12px; font-weight: 700; }
+.stmt.right { border-color: var(--accent); }
+.stmt.right .mark { color: var(--accent); }
+.stmt.wrong { border-color: var(--bad); background: var(--bad-tint); }
+.stmt.wrong .mark { color: var(--bad); }
+.score { display: flex; align-items: baseline; gap: 10px; }
+.score b { font: 600 44px/1 var(--display); color: var(--accent); }
+.score span { color: var(--ink-2); }
+.facts { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; color: var(--ink-2); }
+.facts li::before { content: '·'; color: var(--accent); margin-right: 8px; }
+.key-row { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12.5px; color: var(--muted); }
+.key-row span { display: inline-flex; align-items: center; gap: 6px; }
+.def { padding: 12px 14px; border-radius: 11px; border: 1px solid var(--accent); background: var(--accent-tint); color: var(--ink); }
+
+/* answers */
+.ctl { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 16px; }
+.field { display: inline-flex; align-items: center; gap: 8px; font-size: 16px; }
+.field .mi { font-size: 1.25em; }
+.lamval { font: 600 20px var(--mono); color: var(--ink); }
+.cells { display: inline-grid; gap: 5px; }
+.cells.col { grid-template-columns: auto; padding: 3px 6px; border-left: 2px solid var(--ink-2); border-right: 2px solid var(--ink-2); border-radius: 8px; }
+.cells.row { grid-auto-flow: column; align-items: center; gap: 6px; font-size: 16px; }
+.cell { position: relative; min-width: 60px; height: 44px; padding: 0 10px; display: flex; align-items: center; justify-content: center; border-radius: 9px; border: 1px solid var(--line-2); background: var(--scene); font: 500 18px var(--mono); color: var(--ink); cursor: text; user-select: none; -webkit-user-select: none; }
+.cell.empty { color: var(--muted); }
+.cell.active { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-tint); }
+.cell.fresh .val { background: rgba(89, 225, 255, 0.24); border-radius: 4px; padding: 0 3px; }
+.caret { width: 2px; height: 1.05em; margin-left: 2px; background: var(--accent); animation: blink 1.1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.side { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; min-width: 0; flex: 1 1 160px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 999px; font-size: 13px; border: 1px solid var(--violet); color: var(--violet); background: var(--violet-tint); }
+.chip.rev { border-style: dashed; background: transparent; }
+.chip.empty { border-color: var(--line); color: var(--muted); background: transparent; }
+.eqn { font-size: 13.5px; color: var(--ink-2); }
+.claim { display: flex; flex-direction: column; gap: 10px; }
+.claim .setup { font-size: 14px; color: var(--ink-2); }
+.claim .tv { font-family: var(--math); font-style: italic; font-size: 1.15em; }
+
+/* feedback: hints stay above the latest result */
+.feedback { display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+.feedback:empty { display: none; }
+.feedback p, .feedback details { margin: 0; padding-left: 12px; border-left: 2px solid var(--line-2); text-wrap: pretty; }
+.feedback .good { color: var(--ink); border-left-color: var(--accent); }
+.feedback .bad { color: var(--ink); border-left-color: var(--bad); }
+.feedback .note { color: var(--ink-2); }
+.feedback .hint, .feedback .work { color: var(--ink-2); border-left-style: dashed; border-left-color: var(--violet); }
+.feedback .tag { font-weight: 600; margin-right: 6px; }
+.feedback .good .tag { color: var(--accent); }
+.feedback .bad .tag { color: var(--bad); }
+.feedback .hint .tag, .feedback .work .tag { color: var(--violet); }
+.feedback summary { cursor: pointer; color: var(--accent); font-weight: 600; padding: 4px 0; }
+.feedback details > div { color: var(--ink-2); padding-top: 4px; }
+.pop { animation: pop 0.28s ease-out; }
+@keyframes pop { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+/* buttons */
+.actions { display: flex; gap: 8px; }
+.btn { min-height: 46px; padding: 0 14px; border-radius: 11px; border: 1px solid var(--line-2); background: var(--surface); color: var(--ink); font-weight: 600; font-size: 14.5px; cursor: pointer; white-space: nowrap; }
+.btn.ghost { background: transparent; color: var(--ink-2); }
+.btn.primary { flex: 1; min-width: 0; white-space: normal; line-height: 1.15; background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn:disabled { opacity: 0.4; cursor: default; }
+.btn.small { min-height: 44px; font-size: 13.5px; }
+
+/* number pad (touch screens) */
+.keypad { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 5px; }
+.key { min-height: 44px; border-radius: 9px; border: 1px solid var(--line); background: var(--surface-2); font: 500 18px var(--mono); color: var(--ink); cursor: pointer; padding: 0; }
+.key.fn { font-size: 15px; color: var(--ink-2); }
+.key.wide { grid-column: span 2; }
+.key:disabled { opacity: 0.35; }
+.kbd-note { display: none; font-size: 12px; color: var(--muted); }
+@media (hover: hover) and (pointer: fine) {
+  .keypad { display: none; }
+  .kbd-note:not(:empty) { display: block; }
+}
+
+@media (max-width: 399px) {
+  .tab { gap: 4px; padding: 0 4px; font-size: 13.5px; }
+  .tab .ck { display: none; }
+}
+/* short phones: tighten text so the picture keeps its room */
+@media (max-width: 899px) and (max-height: 700px) {
+  .tasktext h1 { font-size: 15.5px; }
+  .tasktext p { font-size: 12.5px; }
+  .visual { min-height: 130px; }
+  .cell { height: 40px; }
+}
+
+/* wide screens and phones on their side */
+@media (min-width: 900px), (orientation: landscape) and (max-height: 560px) {
+  .app { height: 100%; min-height: 0; padding-top: 12px; gap: 12px; }
+  .top { flex-direction: row; align-items: center; gap: 16px; }
+  .brand { flex-direction: column; gap: 0; }
+  .brand .name { font-size: 19px; color: var(--ink); }
+  .tabs { flex: 0 1 480px; margin-left: auto; }
+  .stage { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr); grid-template-rows: minmax(0, 1fr); gap: 0 28px; padding-bottom: 14px; }
+  .visual, .visual.idle, .visual.has-tiles { grid-column: 1; grid-row: 1; min-height: 0; display: flex; }
+  .panel { grid-column: 2; grid-row: 1; display: flex; flex-direction: column; gap: 12px; min-height: 0; overflow-y: auto; padding: 2px 4px 0 2px; }
+  .dock { margin: auto 0 0; padding: 10px 0 2px; border-top: 0; }
+  .legend { display: flex; }
+  .stage[data-phase="why"] .visual, .stage[data-phase="done"] .visual { overflow-y: auto; }
+}
+@media (min-width: 900px) {
+  .tasktext h1 { font-size: 21px; }
+  .tasktext p { font-size: 14.5px; }
+  .tiles { gap: 12px; }
+  .cap { font-size: 14px; }
+  .reason { font-size: 13px; }
+  .card { padding: 22px; }
+  .card h2 { font-size: 19px; }
+}
+@media (orientation: landscape) and (max-height: 560px) {
+  .brand, .legend { display: none; }
+  .app { padding-top: 6px; gap: 6px; }
+  .tab { min-height: 38px; }
+  .stage { padding-bottom: 6px; }
+  .tasktext h1 { font-size: 15px; }
+  .tasktext p { font-size: 12.5px; }
+  .key { min-height: 38px; }
+  .btn { min-height: 40px; }
+  .cell { height: 38px; }
+  .dock { padding-top: 6px; gap: 5px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pop, .caret { animation: none; }
+}
+</style>
+
+<div class="app">
+  <header class="top">
+    <div class="brand"><span class="kick">Chapter 18</span><span class="name">Eigenvectors</span></div>
+    <div class="tabs" role="tablist" aria-label="Drills" id="tabs"></div>
+  </header>
+  <main class="stage" id="stage">
+    <section class="visual" id="visual"></section>
+    <div class="panel" id="panel">
+      <section class="task" id="task"></section>
+      <section class="controls" id="controls"></section>
+      <div class="feedback" id="feedback" aria-live="polite"></div>
+      <div class="dock" id="dock">
+        <div class="actions" id="actions"></div>
+        <div class="keypad" id="keypad" role="group" aria-label="Number keys"></div>
+        <div class="kbd-note" id="kbdnote"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+(() => {
+'use strict';
+const MINUS = '−', TIMES = '×';
+const EPS = 1e-9;
+const TESTS = 3;
+const LOCK_MS = 400;
+const STORE = 'singular-eigen-drills-v2';
+
+// ------------------------------------------------------------------ maths (2 x 2)
+const mul = (A, x) => [A[0][0] * x[0] + A[0][1] * x[1], A[1][0] * x[0] + A[1][1] * x[1]];
+const tr = (A) => [[A[0][0], A[1][0]], [A[0][1], A[1][1]]];
+const det = (A) => A[0][0] * A[1][1] - A[0][1] * A[1][0];
+const cross = (u, v) => u[0] * v[1] - u[1] * v[0];
+const dot = (u, v) => u[0] * v[0] + u[1] * v[1];
+const len = (v) => Math.hypot(v[0], v[1]);
+const isZero = (v) => len(v) < 1e-7;
+const parallel = (u, v) => Math.abs(cross(u, v)) <= 1e-7 * Math.max(1, len(u) * len(v));
+const close = (u, v) => Math.abs(u[0] - v[0]) < 1e-6 && Math.abs(u[1] - v[1]) < 1e-6;
+// A keeps x on its own line when Ax lies on the line through x (Ax = 0 counts: 0 is on every line)
+const onLine = (A, x) => { const y = mul(A, x); return isZero(y) || parallel(x, y); };
+const stretchOf = (A, x) => dot(x, mul(A, x)) / dot(x, x);
+// how far Ax is from x's line, in degrees (backwards is on the line)
+const offLineDeg = (A, x) => { const y = mul(A, x); if (isZero(y)) return 0; const t = Math.abs(Math.atan2(cross(x, y), dot(x, y))) * 180 / Math.PI; return Math.min(t, 180 - t); };
+const gcd = (a, b) => { a = Math.abs(a); b = Math.abs(b); while (b) [a, b] = [b, a % b]; return a; };
+const cols = (A) => [[A[0][0], A[1][0]], [A[0][1], A[1][1]]];
+
+// the simplest whole-number arrow along v, pointing right (or up)
+function niceDir(v) {
+  const m = Math.max(Math.abs(v[0]), Math.abs(v[1]));
+  if (m < EPS) return [0, 0];
+  const u = [v[0] / m, v[1] / m];
+  let p = null;
+  for (let q = 1; q <= 12 && !p; q++) {
+    const a = u[0] * q, b = u[1] * q;
+    if (Math.abs(a - Math.round(a)) < 1e-6 && Math.abs(b - Math.round(b)) < 1e-6) {
+      const r = [Math.round(a), Math.round(b)], g = gcd(r[0], r[1]) || 1;
+      p = [r[0] / g, r[1] / g];
+    }
+  }
+  if (!p) p = [Math.round(u[0] * 100) / 100, Math.round(u[1] * 100) / 100];
+  if (p[0] < 0 || (p[0] === 0 && p[1] < 0)) p = [-p[0], -p[1]];
+  return [p[0] + 0, p[1] + 0];
+}
+
+// the real lines A keeps, each with its λ (A = cI, which keeps every line, is never used)
+function eigenLines(A) {
+  const [[a, b], [c, d]] = A;
+  const t = a + d, dt = a * d - b * c, disc = t * t - 4 * dt;
+  if (disc < -EPS) return [];
+  const r = Math.sqrt(Math.max(0, disc));
+  const lams = r < 1e-9 ? [t / 2] : [(t + r) / 2, (t - r) / 2];
+  const out = [];
+  for (const l of lams) {
+    const p = [a - l, b], q = [c, d - l];
+    const row = Math.abs(p[0]) + Math.abs(p[1]) > 1e-9 ? p : q;
+    if (Math.abs(row[0]) + Math.abs(row[1]) < 1e-9) continue;
+    out.push({ dir: niceDir([-row[1], row[0]]), lam: l });
+  }
+  return out;
+}
+
+function realRoots(p2, p1, p0) {
+  if (Math.abs(p2) < EPS) return Math.abs(p1) < EPS ? [] : [-p0 / p1];
+  const disc = p1 * p1 - 4 * p2 * p0;
+  if (disc < -EPS) return [];
+  if (Math.abs(disc) <= EPS) return [-p1 / (2 * p2)];
+  const r = Math.sqrt(disc);
+  return [(-p1 - r) / (2 * p2), (-p1 + r) / (2 * p2)].sort((x, y) => x - y);
+}
+// with x = (t, 1): Ax is on x's line when (at + b) = t(ct + d), that is c t² + (d − a) t − b = 0
+const tEq = (A) => [A[1][0], A[1][1] - A[0][0], -A[0][1]];
+// two lists of 3 numbers that are non-zero multiples of each other
+function prop3(p, w) {
+  const big = Math.max(...p.map(Math.abs)), bw = Math.max(...w.map(Math.abs));
+  if (big < EPS || bw < EPS) return false;
+  const tol = 1e-7 * big * bw;
+  return Math.abs(p[0] * w[1] - p[1] * w[0]) <= tol && Math.abs(p[0] * w[2] - p[2] * w[0]) <= tol && Math.abs(p[1] * w[2] - p[2] * w[1]) <= tol;
+}
+
+function mulberry32(seed) {
+  return () => { seed |= 0; seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+function shuffle(arr, rnd) { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
+
+// ------------------------------------------------------------------ writing numbers
+function fmt(n) {
+  if (Math.abs(n) < 1e-9) return '0';
+  const r = Math.round(n);
+  const body = Math.abs(n - r) < 1e-9 ? String(Math.abs(r)) : String(Math.abs(Math.round(n * 100) / 100));
+  return (n < 0 ? MINUS : '') + body;
+}
+// fractions stay fractions: 1/2, 2/3
+function fmtL(n) {
+  if (Math.abs(n) < 1e-9) return '0';
+  if (Math.abs(n - Math.round(n)) < 1e-9) return fmt(n);
+  for (const q of [2, 3, 4, 5, 6, 8]) { const p = n * q; if (Math.abs(p - Math.round(p)) < 1e-9) return (n < 0 ? MINUS : '') + `${Math.abs(Math.round(p))}/${q}`; }
+  return fmt(n);
+}
+const fmtP = (n) => (n < 0 ? `(${fmt(n)})` : fmt(n));
+const MI = (t) => `<span class="mi">${t}</span>`;
+const AX = MI('Ax');
+const NW = (s) => `<span class="nw">${s}</span>`;
+const XAXIS = 'x‑axis';
+const col = (a, b, cls = 'in') => `<span class="cv ${cls}"><span>${a}</span><span>${b}</span></span>`;
+const V = (v, cls = 'in') => col(fmt(v[0]), fmt(v[1]), cls);
+const VL = (v, cls = 'in') => col(fmtL(v[0]), fmtL(v[1]), cls);
+const plain = (v) => `(${fmt(v[0])}, ${fmt(v[1])})`;
+// a·t + b, written the way a person would
+function linT(a, b) {
+  const parts = [];
+  if (Math.abs(a) > EPS) parts.push({ neg: a < 0, s: (Math.abs(Math.abs(a) - 1) < EPS ? '' : fmt(Math.abs(a))) + 't' });
+  if (Math.abs(b) > EPS || !parts.length) parts.push({ neg: b < 0, s: fmt(Math.abs(b)) });
+  return parts.map((p, i) => (i === 0 ? (p.neg ? MINUS : '') + p.s : (p.neg ? ` ${MINUS} ` : ' + ') + p.s)).join('');
+}
+function poly2(c2, c1, c0) {
+  const parts = [];
+  if (Math.abs(c2) > EPS) parts.push({ neg: c2 < 0, s: (Math.abs(Math.abs(c2) - 1) < EPS ? '' : fmtL(Math.abs(c2))) + 't²' });
+  if (Math.abs(c1) > EPS) parts.push({ neg: c1 < 0, s: (Math.abs(Math.abs(c1) - 1) < EPS ? '' : fmtL(Math.abs(c1))) + 't' });
+  if (Math.abs(c0) > EPS || !parts.length) parts.push({ neg: c0 < 0, s: fmtL(Math.abs(c0)) });
+  return parts.map((p, i) => (i === 0 ? (p.neg ? MINUS : '') + p.s : (p.neg ? ` ${MINUS} ` : ' + ') + p.s)).join('');
+}
+// "t × 2t" or "t × (t − 1)"
+function tTimes(s) { const single = !s.includes(' + ') && !s.includes(` ${MINUS} `) && !s.startsWith(MINUS); return `t ${TIMES} ${single ? s : `(${s})`}`; }
+const offStr = (A, x) => { const d = offLineDeg(A, x); return d < 1 ? 'less than 1°' : `${Math.round(d)}°`; };
+const shown = (s) => String(s).replace(/-/g, MINUS);
+
+// what the player typed: a number, or why it isn't one yet
+function parseEntry(str) {
+  const t = String(str || '').trim();
+  if (!t) return { err: 'empty' };
+  if (/[./-]$/.test(t)) return { err: 'unfinished' };
+  if (!/^-?(\d+\.?\d*|\.\d+)(\/(\d+\.?\d*|\.\d+))?$/.test(t)) return { err: 'unfinished' };
+  const [p, q] = t.split('/');
+  if (q !== undefined && Number(q) === 0) return { err: 'div0' };
+  const v = q === undefined ? Number(p) : Number(p) / Number(q);
+  return Number.isFinite(v) ? { v } : { err: 'unfinished' };
+}
+function entryMsg(err, what) {
+  if (err === 'div0') return 'Can’t divide by 0. Change the number under the /.';
+  if (err === 'unfinished') return 'Finish the number first (it ends in / or . or −).';
+  return `Type ${what} first.`;
+}
+
+// ------------------------------------------------------------------ DOM helpers
+const NS = 'http://www.w3.org/2000/svg';
+function h(tag, attrs, ...kids) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (v == null || v === false) continue;
+    if (k === 'class') e.className = v;
+    else if (k === 'html') e.innerHTML = v;
+    else if (k.startsWith('on') && typeof v === 'function') e.addEventListener(k.slice(2), v);
+    else e.setAttribute(k, v === true ? '' : String(v));
+  }
+  for (const c of kids.flat()) if (c != null && c !== false) e.append(c instanceof Node ? c : document.createTextNode(String(c)));
+  return e;
+}
+function sv(tag, attrs) { const e = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs || {})) if (v != null) e.setAttribute(k, String(v)); return e; }
+const $ = (id) => document.getElementById(id);
+const fill = (el, ...kids) => el.replaceChildren(...kids.flat().filter((k) => k != null && k !== false));
+const clamp = (v, lo, hi) => (lo > hi ? (lo + hi) / 2 : Math.max(lo, Math.min(hi, v)));
+
+// ------------------------------------------------------------------ the picture
+// Sizes are in screen pixels: k converts them to viewBox units, so arrows look the same in a tile and in the big picture.
+function paintScene(svg, R, items) {
+  const W = svg.clientWidth || 300, H = svg.clientHeight || 300, m = Math.max(40, Math.min(W, H));
+  const k = 200 / m, hx = (100 * W) / m, hy = (100 * H) / m, U = 100 / R;
+  svg.setAttribute('viewBox', `${-hx} ${-hy} ${2 * hx} ${2 * hy}`);
+  svg.replaceChildren();
+  const step = R <= 7 ? 1 : R <= 14 ? 2 : 5;
+  const grid = sv('g', { class: 'grid', 'stroke-width': k });
+  for (let i = step; i * U <= hx; i += step) for (const sg of [-1, 1]) grid.append(sv('line', { x1: sg * i * U, y1: -hy, x2: sg * i * U, y2: hy }));
+  for (let j = step; j * U <= hy; j += step) for (const sg of [-1, 1]) grid.append(sv('line', { x1: -hx, y1: sg * j * U, x2: hx, y2: sg * j * U }));
+  const axes = sv('g', { class: 'axes', 'stroke-width': 1.4 * k });
+  axes.append(sv('line', { x1: -hx, y1: 0, x2: hx, y2: 0 }), sv('line', { x1: 0, y1: -hy, x2: 0, y2: hy }));
+  svg.append(grid, axes);
+  const P = (v) => [v[0] * U, -v[1] * U];
+  const far = (hx + hy) * 2;
+  const ctx = { k, hx, hy, boxes: [], lines: items.filter((it) => it.t === 'line' && it.cls === 'found').map((it) => it.dir) };
+  for (const it of items) {
+    if (it.t === 'line') {
+      const l = len(it.dir); if (l < EPS) continue;
+      const u = [it.dir[0] / l, -it.dir[1] / l];
+      svg.append(sv('line', { class: `ln ${it.cls}`, x1: -u[0] * far, y1: -u[1] * far, x2: u[0] * far, y2: u[1] * far, 'stroke-width': (it.w || 2) * k, 'stroke-dasharray': it.dash ? `${7 * k} ${6 * k}` : null, opacity: it.op ?? 1 }));
+    } else if (it.t === 'arrow') drawArrow(svg, P(it.v), it, k);
+    else if (it.t === 'dot') { const p = P(it.v); svg.append(sv('circle', { class: `dot-${it.cls}`, cx: p[0], cy: p[1], r: (it.r || 5) * k, opacity: it.op ?? 1 })); }
+  }
+  // labels last, so they sit on top and can avoid each other
+  for (const it of items) {
+    if (it.t === 'label') drawLabel(svg, it, P(it.at), ctx);
+    else if (it.t === 'linelabel') drawLineLabel(svg, it, ctx);
+  }
+}
+function drawArrow(svg, p, it, k) {
+  const L = Math.hypot(p[0], p[1]); if (L < 1e-6) return;
+  const hl = Math.min((it.head || 12) * k, L * 0.55), hw = hl * 0.55;
+  const u = [p[0] / L, p[1] / L], n = [-u[1], u[0]];
+  const b = [p[0] - u[0] * hl * 0.9, p[1] - u[1] * hl * 0.9];
+  const g = sv('g', { class: `arw ${it.cls}`, opacity: it.op ?? 1 });
+  g.append(sv('line', { x1: 0, y1: 0, x2: b[0], y2: b[1], 'stroke-width': (it.w || 3) * k }));
+  g.append(sv('polygon', { points: `${p[0]},${p[1]} ${p[0] - u[0] * hl + n[0] * hw},${p[1] - u[1] * hl + n[1] * hw} ${p[0] - u[0] * hl - n[0] * hw},${p[1] - u[1] * hl - n[1] * hw}` }));
+  svg.append(g);
+}
+const textW = (text, fs, cls) => text.length * (cls === 'v' ? 0.62 : 0.56) * fs;
+const boxOf = (cx, cy, w, hh) => [cx - w / 2, cy - hh / 2, cx + w / 2, cy + hh / 2];
+const overlaps = (a, b) => a[0] < b[2] && b[0] < a[2] && a[1] < b[3] && b[1] < a[3];
+function putText(svg, cls, text, cx, cy, fs, k) {
+  const t = sv('text', { class: `lbl ${cls}`, x: cx, y: cy + fs * 0.35, 'font-size': fs, 'text-anchor': 'middle', 'stroke-width': 4 * k });
+  t.textContent = text;
+  svg.append(t);
+}
+// an arrow's label sits beside the arrow near its tip, on side +1 or −1, never on top of it
+function drawLabel(svg, it, p, ctx) {
+  const { k, hx, hy, boxes } = ctx;
+  const fs = (it.px || 17) * k, w = textW(it.text, fs, it.cls), hh = fs * 1.1;
+  const L = Math.hypot(p[0], p[1]);
+  const u = L > 1e-6 ? [p[0] / L, p[1] / L] : [Math.SQRT1_2, -Math.SQRT1_2];
+  const base = L > 1e-6 ? [p[0] - u[0] * Math.min(L * 0.25, 12 * k), p[1] - u[1] * Math.min(L * 0.25, 12 * k)] : [0, 0];
+  let pick = null;
+  for (const s of it.side ? [it.side, -it.side] : [1, -1]) {
+    const n = [-u[1] * s, u[0] * s];
+    const off = (L > 1e-6 ? 7 : 12) * k + Math.abs(n[0]) * w / 2 + Math.abs(n[1]) * hh / 2;
+    const cx = clamp(base[0] + n[0] * off, -hx + w / 2 + 4 * k, hx - w / 2 - 4 * k);
+    const cy = clamp(base[1] + n[1] * off, -hy + hh / 2 + 2 * k, hy - hh / 2 - 2 * k);
+    const b = boxOf(cx, cy, w, hh);
+    if (!pick) pick = { cx, cy, b };
+    if (!boxes.some((o) => overlaps(o, b))) { pick = { cx, cy, b }; break; }
+  }
+  boxes.push(pick.b);
+  putText(svg, it.cls, it.text, pick.cx, pick.cy, fs, k);
+}
+// a kept line's "λ = …" label: beside the line (never across it), at whichever end is free
+function drawLineLabel(svg, it, ctx) {
+  const { k, hx, hy, boxes } = ctx;
+  const l = len(it.dir); if (l < EPS) return;
+  let u = [it.dir[0] / l, -it.dir[1] / l];
+  if (u[0] < -1e-9 || (Math.abs(u[0]) < 1e-9 && u[1] > 0)) u = [-u[0], -u[1]];
+  const fs = (it.px || 15) * k, w = textW(it.text, fs, 'v'), hh = fs * 1.15;
+  const edge = Math.min(Math.abs(u[0]) > 1e-9 ? hx / Math.abs(u[0]) : Infinity, Math.abs(u[1]) > 1e-9 ? hy / Math.abs(u[1]) : Infinity);
+  let n0 = [-u[1], u[0]]; if (n0[1] > 0) n0 = [-n0[0], -n0[1]];
+  const others = ctx.lines.filter((d) => !parallel(d, it.dir)).map((d) => [d[0], -d[1]]);
+  const crosses = (b) => others.some((d) => { const sg = [[b[0], b[1]], [b[2], b[1]], [b[0], b[3]], [b[2], b[3]]].map((c) => d[0] * c[1] - d[1] * c[0]); return Math.min(...sg) < 0 && Math.max(...sg) > 0; });
+  const cands = [];
+  for (const end of [1, -1]) for (const s of [1, -1]) {
+    const n = [n0[0] * s, n0[1] * s];
+    const off = 6 * k + Math.abs(n[0]) * w / 2 + Math.abs(n[1]) * hh / 2;
+    for (const f of [0.82, 0.68, 0.54, 0.4]) {
+      const t = edge * f * end, cx = u[0] * t + n[0] * off, cy = u[1] * t + n[1] * off;
+      const b = boxOf(cx, cy, w, hh);
+      if (b[0] < -hx + 3 * k || b[2] > hx - 3 * k || b[1] < -hy + 3 * k || b[3] > hy - 3 * k) continue;
+      cands.push({ cx, cy, b, free: !boxes.some((o) => overlaps(o, b)), clear: !crosses(boxOf(cx, cy, w + 6 * k, hh + 4 * k)) });
+    }
+  }
+  const pick = cands.find((c) => c.free && c.clear) || cands.find((c) => c.free) || cands[0];
+  if (!pick) return;
+  boxes.push(pick.b);
+  putText(svg, 'v', it.text, pick.cx, pick.cy, fs, k);
+}
+const viewR = (vs, min = 2, pad = 1.25) => Math.max(min, ...vs.map(len)) * pad;
+function paintTile(s, x, ax) {
+  const items = [{ t: 'line', dir: x, cls: 'dash', dash: true, w: 1.6, op: 0.75 }];
+  if (isZero(ax)) items.push({ t: 'dot', v: [0, 0], cls: 'y', r: 4.5 });
+  else items.push({ t: 'arrow', v: ax, cls: 'y', w: 5, head: 12 });
+  items.push({ t: 'arrow', v: x, cls: 'g', w: 2.4, head: 9 });
+  paintScene(s, viewR([x, ax], 1.5, 1.2), items);
+}
+// x and Ax labels: when both lie on one line, they go on opposite sides
+function arrowLabels(x, ax, px = 19) {
+  const out = [{ t: 'label', at: x, text: 'x', cls: 'g', px, side: 1 }];
+  if (isZero(ax)) out.push({ t: 'label', at: [0, 0], text: 'Ax = 0', cls: 'y', px: px - 2, side: -1 });
+  else out.push({ t: 'label', at: ax, text: 'Ax', cls: 'y', px, side: -1 });
+  return out;
+}
+
+// ------------------------------------------------------------------ content (every round checked: its lines, λ, and traps)
+// Drill 1. Help fades: a picture (look), then Ax as numbers (read), then work Ax out (work).
+// Each round has 5 tiles; "None of these" is right in round 6. Tiles marked "trap" in the notes are kept by A's rows-as-columns, not by A.
+const D1 = [
+  { stage: 'look', A: [[2, 1], [1, 2]], xs: [[1, 1], [-1, 1], [1, 0], [2, 1], [0, -1]], retry: { A: [[2, 2], [2, -1]], xs: [[2, 1], [-1, 2], [1, 0], [1, 1], [0, 1]] } },
+  { stage: 'look', A: [[0, 1], [1, 0]], xs: [[1, -1], [2, 2], [-1, -1], [1, 0], [2, 1]], retry: { A: [[-1, 2], [2, 2]], xs: [[1, 2], [-2, 1], [2, 4], [1, 0], [1, 1]] } },
+  { stage: 'read', A: [[4, -6], [2, -3]], xs: [[3, 2], [2, 1], [-4, -2], [1, 1], [1, 0]], retry: { A: [[2, -1], [6, -3]], xs: [[1, 2], [2, 6], [1, 1], [2, 1], [0, 1]] } },
+  { stage: 'read', A: [[1, 2], [2, -2]], xs: [[2, 1], [-1, 2], [1, 1], [1, 2], [2, -1]], retry: { A: [[4, 3], [3, -4]], xs: [[3, 1], [-1, 3], [1, 1], [1, 0], [2, 1]] } },
+  { stage: 'work', A: [[3, 1], [2, 2]], xs: [[1, 1], [-1, 2], [2, 1], [1, -1], [0, 1]], retry: { A: [[1, 2], [3, 2]], xs: [[2, 3], [-1, 1], [1, 1], [3, -2], [1, 0]] } },
+  { stage: 'work', A: [[-1, 3], [2, 4]], xs: [[1, 1], [2, 1], [1, -1], [1, 3], [2, -1]], retry: { A: [[2, 3], [1, 4]], xs: [[1, 2], [2, 1], [1, -1], [1, 3], [2, -1]] } },
+  { stage: 'work', A: [[1, 2], [4, -1]], xs: [[2, 2], [-1, 2], [-3, -3], [2, 1], [0, 1]], retry: { A: [[-1, 2], [4, 1]], xs: [[2, 4], [-1, 1], [-1, -2], [1, 1], [1, 0]] } },
+];
+// Drill 2. λ = 3, −1 from the picture; 1/2, 0 from numbers; then 4, −2, 3, 1 worked out. Each retry keeps the same λ with a new matrix.
+const D2 = [
+  { stage: 'look', A: [[1, 2], [0, 3]], x: [1, 1], retry: { A: [[1, 1], [4, 1]], x: [1, 2] } },
+  { stage: 'look', A: [[0, 1], [1, 0]], x: [2, -2], retry: { A: [[0, 2], [2, 3]], x: [2, -1] } },
+  { stage: 'read', A: [[1.5, -1], [0.5, 0]], x: [2, 2], retry: { A: [[3.5, -1.5], [3, -1]], x: [2, 4] } },
+  { stage: 'read', A: [[2, -4], [1, -2]], x: [2, 1], retry: { A: [[2, 1], [4, 2]], x: [1, -2] } },
+  { stage: 'work', A: [[2, 1], [2, 3]], x: [1, 2], retry: { A: [[2, -1], [-4, 2]], x: [-1, 2] } },
+  { stage: 'work', A: [[1, 6], [1, 0]], x: [2, -1], retry: { A: [[0, -6], [-1, 1]], x: [3, 1] } },
+  { stage: 'work', A: [[5, -3], [2, 0]], x: [-3, -2], retry: { A: [[1, 1], [6, 0]], x: [-1, -2] } },
+  { stage: 'work', A: [[3, -4], [1, -1]], x: [4, 2], retry: { A: [[-1, 1], [-4, 3]], x: [-1, -2] } },
+];
+// Drill 3. Every round has its own lines, none on an axis. Round 1 is a worked example; then two lines, none, one, symmetric, λ = 0, fractions.
+const D3 = [
+  { A: [[5, -6], [1, 0]], worked: true, retry: { A: [[2, 8], [1, 0]] } },
+  { A: [[4, 6], [-1, -1]], retry: { A: [[-1, 8], [1, 1]] } },
+  { A: [[1, -2], [1, 3]], retry: { A: [[0, -1], [1, 1]] } },
+  { A: [[1, -1], [4, -3]], retry: { A: [[5, -9], [1, -1]] } },
+  { A: [[4, 3], [3, -4]], retry: { A: [[2, 2], [2, -1]] } },
+  { A: [[6, -2], [3, -1]], retry: { A: [[3, 6], [-1, -2]] } },
+  { A: [[4, -1], [6, -1]], retry: { A: [[4, 1], [-6, -1]] } },
+];
+
+const DEF_SENTENCE = `An <b>eigenvector</b> of ${MI('A')} is a non-zero arrow ${MI('x')} that ${MI('A')} keeps on its own line: ${NW(`${AX} = ${MI('λ')}${MI('x')}`)}. ${MI('λ')} is its <b>eigenvalue</b>.`;
+
+// end-of-drill questions: tick every true statement (a random guess passes 1 time in 32)
+const WHY = {
+  1: { q: `${MI('x')} is an eigenvector of ${MI('A')}. Tick every true statement.`, items: [
+    { t: `${AX} can point the opposite way to ${MI('x')}.`, ok: true, why: `${MI('λ')} can be negative. ${NW(`${AX} = ${MINUS}2${MI('x')}`)} points backwards, on the same line.` },
+    { t: `${AX} can be shorter than ${MI('x')}.`, ok: true, why: `Any ${MI('λ')} between ${MINUS}1 and 1 does that, such as ${MI('λ')} = 1/2.` },
+    { t: `${MI('x')} can be ${V([0, 0])}.`, ok: false, why: `${V([0, 0])} has no direction, so it isn’t on a line. Eigenvectors are non-zero.` },
+    { t: `${MI('x')} must be one of ${MI('A')}’s columns.`, ok: false, why: `The columns are where ${MI('A')} sends ${V([1, 0])} and ${V([0, 1])}. An eigenvector can be any arrow on a kept line.` },
+    { t: `3${MI('x')} is an eigenvector of ${MI('A')} too.`, ok: true, why: `${NW(`${MI('A')}(3${MI('x')}) = 3${AX} = 3${MI('λ')}${MI('x')}`)}: the same line, the same ${MI('λ')}.` },
+  ] },
+  2: { q: `For a matrix ${MI('A')}, ${NW(`${MI('A')}${V([2, -1])} = ${V([0, 0])}`)}. Tick every true statement.`, items: [
+    { t: `${V([2, -1])} is an eigenvector of ${MI('A')}, with ${MI('λ')} = 0.`, ok: true, why: `${NW(`${AX} = 0 = 0${MI('x')}`)}, and ${MI('x')} isn’t zero.` },
+    { t: `det ${MI('A')} = 0.`, ok: true, why: `${MI('A')} crushes a non-zero arrow to 0, so it flattens the plane.` },
+    { t: `${V([4, -2])} also has ${MI('λ')} = 0.`, ok: true, why: `${NW(`${MI('A')}${V([4, -2])} = 2 ${TIMES} ${MI('A')}${V([2, -1])} = 0`)}.` },
+    { t: `${MI('A')} has no eigenvectors.`, ok: false, why: `${V([2, -1])} is one, with ${MI('λ')} = 0.` },
+    { t: `${MI('λ')} = 0 means ${MI('x')} = ${V([0, 0])}.`, ok: false, why: `${MI('λ')} = 0 means ${AX} = 0. The eigenvector ${MI('x')} itself is non-zero.` },
+  ] },
+  3: { q: `${MI('A')} is a 2 ${TIMES} 2 matrix that doesn’t stretch every arrow the same. Tick every true statement.`, items: [
+    { t: `${MI('A')} can keep no line at all.`, ok: true, why: `When the equation for ${MI('t')} has no real root, no line is kept, as in round 3.` },
+    { t: `${MI('A')} can keep exactly one line.`, ok: true, why: `A repeated root gives one line, as in round 4.` },
+    { t: `${MI('A')} can keep three different lines.`, ok: false, why: `The lines come from a quadratic’s roots, so there are at most two.` },
+    { t: `If ${MI('A')} keeps one line, it must keep a second.`, ok: false, why: `A repeated root gives just one line.` },
+    { t: `Each real root ${MI('t')} gives a kept line, through ${col('t', '1')}.`, ok: true, why: `${MI('t')} solves the equation exactly when ${MI('A')}${col('t', '1')} lies on that arrow’s line.` },
+  ] },
+};
+
+// ------------------------------------------------------------------ state
+let state = null;
+let painters = [];
+let primary = null, lastPrimaryLabel = null, lockUntil = 0;
+let wantCellFocus = false, lastFbKey = '', scrollFb = false;
+const good = (html) => ({ tone: 'good', html });
+const bad = (html) => ({ tone: 'bad', html });
+const note = (html) => ({ tone: 'note', html });
+const more = (summary, html) => ({ tone: 'more', summary, html });
+const run = () => state.runs[state.drill];
+const curItem = () => run().queue[run().pos];
+function newRun(d) { return { queue: DR[d].rounds.map((_, i) => ({ kind: 'main', i })), pos: 0, results: [], phase: 'play', rs: null, why: null, seed: (Math.random() * 2147483647) | 0, defSeen: false }; }
+function freshState() { return { v: 2, drill: 1, runs: { 1: newRun(1), 2: newRun(2), 3: newRun(3) }, best: {} }; }
+function roundData(d, it) { const m = DR[d].rounds[it.i]; return it.kind === 'main' ? m : { ...m, ...m.retry, worked: false, isRetry: true }; }
+const seedFor = (r, it) => (r.seed + 7919 * (it.i + 1) + (it.kind === 'retry' ? 104729 : 0)) | 0;
+
+// a round ends: score it, and decide whether a retry with new numbers follows straight after
+function endRound(rs, rd) {
+  const D = DR[state.drill], it = curItem();
+  const res = D.result(rs, rd);
+  rs.end = { ...res, retry: it.kind === 'main' && D.needsRetry(rs, rd) };
+  if (rs.end.retry) rs.fb.push(note(res.ok ? 'You had help, so a retry with new numbers comes next.' : 'A retry with new numbers comes next.'));
+}
+function nextRound() {
+  const r = run(), it = r.queue[r.pos], rs = r.rs;
+  if (!rs || !rs.end) return;
+  r.results[r.pos] = { ok: rs.end.ok, helped: rs.end.helped, worked: !!rs.end.worked };
+  if (rs.end.retry) r.queue.splice(r.pos + 1, 0, { kind: 'retry', i: it.i });
+  r.pos++;
+  r.rs = null;
+  if (r.pos >= r.queue.length) r.phase = 'why';
+}
+const bump = (rs) => { rs.fbv = (rs.fbv || 0) + 1; scrollFb = true; };
+
+// ------------------------------------------------------------------ the three drills
+const STEP = { look: 'Step 1 of 3: look', read: `Step 2 of 3: read Ax`, work: `Step 3 of 3: work out Ax` };
+const stepTag = (rd) => h('span', { class: 'step' }, STEP[rd.stage]);
+function field(labelHTML, node) { return h('div', { class: 'field' }, h('span', { html: labelHTML }), h('span', {}, '='), node); }
+const pairHTML = (x, ax, size) => `<span class="pair"><span class="pl">${MI('x')}</span><span></span><span class="pl">${AX}</span>${V(x, `${size} g`)}<span class="arrow">→</span>${V(ax, `${size} y`)}</span>`;
+const sumHTML = (A, x) => { const [c1, c2] = cols(A); return `${NW(`${fmtP(x[0])} ${TIMES} ${V(c1)}`)} + ${NW(`${fmtP(x[1])} ${TIMES} ${V(c2)}`)} = ${V(mul(A, x))}`; };
+
+// ---------------- drill 1: Spot it
+function lamWords(l) {
+  if (Math.abs(l) < EPS) return `${AX} = 0`;
+  if (Math.abs(l - 1) < EPS) return `${AX} = ${MI('x')}`;
+  if (Math.abs(l + 1) < EPS) return `${AX} = ${MINUS}${MI('x')}`;
+  return `${AX} = ${fmtL(l)}${MI('x')}`;
+}
+function tileReason(A, x, picked, wasShown) {
+  if (onLine(A, x)) { const w = lamWords(stretchOf(A, x)); return picked || wasShown ? w : `Missed: ${w}`; }
+  return `${offStr(A, x)} off its line`;
+}
+function hintArrow(xs) {
+  for (const e of [[1, 2], [2, -1], [1, 3], [3, 1], [2, 3], [1, -2], [3, -1], [3, 2]]) if (!xs.some((x) => parallel(x, e))) return e;
+  return [1, 2];
+}
+function d1HintText(rd) {
+  if (rd.stage === 'look') return `The dashed line runs through ${MI('x')} both ways. A tile is kept if yellow lies along that line, pointing either way.`;
+  if (rd.stage === 'read') return `Divide each part of ${AX} by the same part of ${MI('x')}. Kept if both give the same number. If a part of ${MI('x')} is 0, that part of ${AX} must be 0 too. ${NW(`${AX} = 0`)} is kept.`;
+  const e = hintArrow(rd.xs);
+  return `${AX} = (top of ${MI('x')}) ${TIMES} first column + (bottom of ${MI('x')}) ${TIMES} second column. For example ${MI('A')}${V(e)} = ${sumHTML(rd.A, e)}. Then ask: is ${AX} one number times ${MI('x')}?`;
+}
+function d1Check(rd, rs) {
+  const r = run(), A = rd.A;
+  const kept = rd.xs.map((x) => onLine(A, x)), nKept = kept.filter(Boolean).length;
+  rs.checked = true;
+  rs.ok = rs.none ? nKept === 0 : kept.every((k, i) => k === rs.sel[i]);
+  const fb = [];
+  if (rs.ok) {
+    fb.push(good(`<span class="tag">All right.</span>${nKept ? `${MI('A')} keeps ${nKept} of these 5 arrows on their own line.` : `${MI('A')} keeps none of these arrows on its own line.`}`));
+    if (!r.defSeen && nKept) { r.defSeen = true; fb.push(note(`These kept arrows are ${MI('A')}’s <b>eigenvectors</b>: non-zero arrows with ${NW(`${AX} = ${MI('λ')}${MI('x')}`)}. The number ${MI('λ')} is the <b>eigenvalue</b>.`)); }
+  } else {
+    fb.push(bad(`<span class="tag">Not quite.</span>Each tile says why.`));
+    const extra = new Map();
+    if (rs.none && nKept) extra.set('none', `“None of these” was wrong: ${nKept === 1 ? '1 tile is' : `${nKept} tiles are`} kept.`);
+    rd.xs.forEach((x, i) => {
+      if (kept[i] && !rs.sel[i]) {
+        const l = stretchOf(A, x);
+        if (Math.abs(l) < EPS) extra.set('zero', `${NW(`${AX} = 0`)} counts: 0 lies on every line, so ${V(x)} is kept, with ${MI('λ')} = 0.`);
+        else if (l < 0) extra.set('back', `Backwards counts: ${NW(`${MI('A')}${V(x)} = ${fmtL(l)} ${TIMES} ${V(x)}`)} points the other way, on the same line.`);
+        else if (Math.abs(l - 1) < EPS) extra.set('one', `${NW(`${MI('A')}${V(x)} = ${V(x)}`)}: ${MI('A')} leaves it as it is, so it is kept, with ${MI('λ')} = 1.`);
+      }
+      if (!kept[i] && rs.sel[i] && onLine(tr(A), x)) extra.set('trap', `${V(x)} is a rows-for-columns trap: ${NW(`${AX} = ${sumHTML(A, x)}`)}, ${offStr(A, x)} off its line.`);
+    });
+    fb.push(...[...extra.values()].slice(0, 2).map(note));
+  }
+  rs.fb = fb; bump(rs);
+  endRound(rs, rd);
+}
+const drill1 = {
+  name: 'Spot it', rounds: D1,
+  trained: `Spotting eigenvectors: arrows that ${MI('A')} keeps on their own line. First from a picture, then from numbers, then by working out ${AX} yourself.`,
+  init: (rd, seed) => ({ order: shuffle([0, 1, 2, 3, 4], mulberry32(seed)), sel: [false, false, false, false, false], none: false, checked: false, ok: false, shown: false, hinted: false, fb: [], hints: [], fbv: 0, end: null }),
+  task(rd) {
+    const sub = {
+      look: `Yellow is ${AX}, where ${MI('A')} sends ${MI('x')}. Kept: yellow lies on the dashed line, pointing either way.`,
+      read: `${AX} is given as numbers. Kept: ${AX} is one number times ${MI('x')}.`,
+      work: `Work out ${AX} yourself. Kept: ${AX} is one number times ${MI('x')}.`,
+    }[rd.stage];
+    return { title: `Tap every tile where ${MI('A')} keeps ${MI('x')} on its own line.`, sub };
+  },
+  metaRight: stepTag,
+  legend: (rd) => (rd.stage === 'look' ? ['g', 'y', 'd'] : []),
+  visual(rd, rs, el) {
+    el.classList.add('has-tiles');
+    const grid = h('div', { class: 'tiles' });
+    const kept = rd.xs.map((x) => onLine(rd.A, x));
+    rs.order.forEach((xi, j) => {
+      const x = rd.xs[xi], ax = mul(rd.A, x), picked = !!rs.sel[xi], k = kept[xi];
+      const picture = rd.stage === 'look' || rs.checked;
+      let cls = 'tile' + (picture ? '' : ' nums');
+      if (rs.checked) cls += rs.shown ? (k ? ' answer' : '') : (k === picked ? ' right' : ' wrong');
+      const aria = `Tile ${j + 1}: x = ${plain(x)}` + (rd.stage === 'read' || rs.checked ? `, A x = ${plain(ax)}` : '') + (rs.checked ? `. ${tileReason(rd.A, x, picked, rs.shown).replace(/<[^>]+>/g, '')}` : '');
+      const t = h('button', { class: cls, id: `tile-${j}`, 'aria-pressed': String(picked), 'aria-label': aria, disabled: rs.checked || null, onclick: () => { rs.sel[xi] = !rs.sel[xi]; if (rs.sel[xi]) rs.none = false; render(); } });
+      t.append(h('span', { class: 'tick', 'aria-hidden': 'true' }, picked ? '✓' : ''));
+      if (rs.checked && !rs.shown) t.append(h('span', { class: 'mark', 'aria-hidden': 'true' }, k === picked ? '✓' : '✗'));
+      if (picture) { const s = sv('svg', { 'aria-hidden': 'true' }); t.append(s); painters.push(() => paintTile(s, x, ax)); }
+      let cap;
+      if (rs.checked) cap = pairHTML(x, ax, 'sm');
+      else if (rd.stage === 'read') cap = pairHTML(x, ax, 'md');
+      else if (rd.stage === 'work') cap = `${MI('x')} = ${V(x, 'lg g')}`;
+      else cap = `${MI('x')} = ${V(x, 'sm g')}`;
+      t.append(h('div', { class: 'cap', html: cap }));
+      if (rs.checked) t.append(h('div', { class: 'reason', html: tileReason(rd.A, x, picked, rs.shown) }));
+      grid.append(t);
+    });
+    const noneRight = !kept.some(Boolean), nKept = kept.filter(Boolean).length;
+    let ncls = 'tile none';
+    if (rs.checked) ncls += rs.shown ? (noneRight ? ' answer' : '') : (noneRight === rs.none ? ' right' : ' wrong');
+    const nt = h('button', { class: ncls, id: 'tile-none', 'aria-pressed': String(rs.none), disabled: rs.checked || null, onclick: () => { rs.none = !rs.none; if (rs.none) rs.sel.fill(false); render(); } });
+    nt.append(h('span', { class: 'tick', 'aria-hidden': 'true' }, rs.none ? '✓' : ''));
+    if (rs.checked && !rs.shown) nt.append(h('span', { class: 'mark', 'aria-hidden': 'true' }, noneRight === rs.none ? '✓' : '✗'));
+    nt.append(h('div', { class: 'none-txt' }, 'None of these'));
+    if (rs.checked) nt.append(h('div', { class: 'reason' }, noneRight ? 'No tile is kept' : `${nKept} ${nKept === 1 ? 'tile is' : 'tiles are'} kept`));
+    grid.append(nt);
+    el.append(grid);
+  },
+  controls: () => null,
+  primary: (rd, rs) => (rs.checked ? { label: 'Next', act: nextRound } : { label: 'Check', act: () => d1Check(rd, rs), disabled: !(rs.none || rs.sel.some(Boolean)) }),
+  hint(rd, rs) {
+    if (rs.checked) return null;
+    return rs.hinted ? { label: 'Hint', disabled: true } : { label: 'Hint', act: () => { rs.hinted = true; rs.hints.push({ tone: 'hint', html: `<span class="tag">Hint</span>${d1HintText(rd)}` }); bump(rs); } };
+  },
+  show(rd, rs) {
+    if (rs.checked) return null;
+    return () => {
+      rs.sel = rd.xs.map((x) => onLine(rd.A, x)); rs.none = !rs.sel.some(Boolean);
+      rs.checked = true; rs.shown = true; rs.ok = false;
+      rs.fb = [note('Answers shown, with the reason on each tile. A shown answer counts as a miss.')]; bump(rs);
+      endRound(rs, rd);
+    };
+  },
+  typing: () => false,
+  kbd: () => '',
+  result: (rs) => ({ ok: rs.ok && !rs.shown, helped: rs.hinted }),
+  needsRetry: (rs, rd) => !rs.ok || rs.shown || (rd.stage === 'work' && rs.hinted),
+};
+
+// ---------------- drill 2: How much?
+function lamNote(l) {
+  if (Math.abs(l) < EPS) return [note(`${MI('λ')} = 0: ${MI('A')} crushes this whole line to one point, the origin.`)];
+  if (l < 0) return [note(`${MI('λ')} is negative: ${AX} points backwards, along the same line.`)];
+  if (l < 1 - EPS) return [note(`${MI('λ')} is between 0 and 1: ${AX} is shorter than ${MI('x')}.`)];
+  if (Math.abs(l - 1) < EPS) return [note(`${MI('λ')} = 1: ${MI('A')} leaves ${MI('x')} exactly as it is.`)];
+  return [];
+}
+function d2Why(rd, v, typed) {
+  const lam = stretchOf(rd.A, rd.x), ax = mul(rd.A, rd.x);
+  if (Math.abs(lam) > EPS && Math.abs(Math.abs(lam) - 1) > EPS && Math.abs(v - 1 / lam) < 1e-6) return `That is ${MI('x')} ÷ ${AX}. Flip it: ${MI('λ')} = ${AX} ÷ ${MI('x')}, part by part.`;
+  if (Math.abs(lam) > EPS && Math.abs(v + lam) < 1e-6) return `Right size, wrong sign. Does ${AX} point the same way as ${MI('x')}, or backwards?`;
+  const other = eigenLines(rd.A).find((l) => !parallel(l.dir, rd.x) && Math.abs(l.lam - v) < 1e-6);
+  if (other) return `That is ${MI('A')}’s ${MI('λ')} on its other line, through ${V(other.dir)}. This ${MI('x')} is on a different line.`;
+  return `${NW(`${shown(typed)} ${TIMES} ${V(rd.x)} = ${VL([v * rd.x[0], v * rd.x[1]])}`)}, but ${NW(`${AX} = ${V(ax)}`)}.`;
+}
+function d2HintText(rd, rs) {
+  const [c1, c2] = cols(rd.A);
+  if (rd.stage === 'look') return `Count squares from the origin to the tip of ${AX}, then to the tip of ${MI('x')}. How many ${MI('x')}’s make one ${AX}? If ${AX} points backwards, ${MI('λ')} is negative.`;
+  if (rs.step === 1) return `${AX} = ${NW(`${fmtP(rd.x[0])} ${TIMES} ${V(c1)}`)} + ${NW(`${fmtP(rd.x[1])} ${TIMES} ${V(c2)}`)}: scale each column of ${MI('A')}, then add.`;
+  return `Divide part by part: (top of ${AX}) ÷ (top of ${MI('x')}). The bottoms give the same number.`;
+}
+function d2Check(rd, rs) {
+  const raw = rs.cells.slice(), parsed = raw.map(parseEntry);
+  const err = parsed.find((p) => p.err);
+  if (err) { rs.fb = [bad(entryMsg(err.err, rs.step === 1 ? `both parts of ${AX}` : `a number for ${MI('λ')}`))]; bump(rs); return; }
+  const key = raw.join('|');
+  if (rs.lastWrong === key) { rs.fb = [...rs.fb.filter((f) => !f.same), { ...bad('That is the same answer as before. Change it first.'), same: true }]; bump(rs); return; }
+  const ax = mul(rd.A, rd.x), lam = stretchOf(rd.A, rd.x), r = run();
+  if (rs.step === 1) {
+    const v = parsed.map((p) => p.v);
+    if (close(v, ax)) {
+      rs.step = 2; rs.cells = ['']; rs.active = 0; rs.fresh = []; rs.lastWrong = null;
+      rs.fb = [good(`<span class="tag">Yes.</span>${NW(`${AX} = ${V(ax)}`)}. Now find ${MI('λ')}.`)]; bump(rs);
+      return;
+    }
+    rs.tries1++; rs.lastWrong = key; rs.fresh = rs.cells.map(() => true); rs.active = 0;
+    if (rs.tries1 >= 2) {
+      rs.step = 2; rs.cells = ['']; rs.active = 0; rs.fresh = []; rs.lastWrong = null; rs.axHelp = true;
+      rs.fb = [bad(`<span class="tag">${AX} = ${V(ax)}.</span>${AX} = ${sumHTML(rd.A, rd.x)}.`), note(`Now find ${MI('λ')}.`)]; bump(rs);
+      return;
+    }
+    const [c1, c2] = cols(rd.A), at = mul(tr(rd.A), rd.x);
+    let why;
+    if (close(v, at)) why = `That uses ${MI('A')}’s rows as columns. ${AX} = ${NW(`${fmtP(rd.x[0])} ${TIMES} first column`)} + ${NW(`${fmtP(rd.x[1])} ${TIMES} second column`)}.`;
+    else if (Math.abs(v[0] - ax[0]) < 1e-6) why = `The top is right. Check the bottom: ${NW(`${fmtP(c1[1])} ${TIMES} ${fmtP(rd.x[0])} + ${fmtP(c2[1])} ${TIMES} ${fmtP(rd.x[1])}`)}.`;
+    else if (Math.abs(v[1] - ax[1]) < 1e-6) why = `The bottom is right. Check the top: ${NW(`${fmtP(c1[0])} ${TIMES} ${fmtP(rd.x[0])} + ${fmtP(c2[0])} ${TIMES} ${fmtP(rd.x[1])}`)}.`;
+    else why = `${AX} = ${NW(`${fmtP(rd.x[0])} ${TIMES} ${V(c1)}`)} + ${NW(`${fmtP(rd.x[1])} ${TIMES} ${V(c2)}`)}. Scale each column, then add.`;
+    rs.fb = [bad(`<span class="tag">Not quite.</span>${why}`)]; bump(rs);
+    return;
+  }
+  const v = parsed[0].v;
+  if (Math.abs(v - lam) < 1e-6) {
+    rs.done = true; rs.ok = true;
+    rs.fb = [good(`<span class="tag">Yes, ${MI('λ')} = ${fmtL(lam)}.</span>${NW(`${AX} = ${V(ax)} = ${fmtL(lam)} ${TIMES} ${V(rd.x)}`)}.`), ...lamNote(lam)];
+    if (!r.defSeen) { r.defSeen = true; rs.fb.push(note(`${MI('λ')} is the <b>eigenvalue</b> that goes with the eigenvector ${MI('x')}.`)); }
+    bump(rs); endRound(rs, rd);
+    return;
+  }
+  rs.tries2++; rs.lastWrong = key; rs.fresh = [true];
+  const why = d2Why(rd, v, raw[0]);
+  if (rs.tries2 >= 2) {
+    rs.done = true; rs.ok = false;
+    rs.fb = [bad(`<span class="tag">Not ${shown(raw[0])}.</span>${why}`), note(`${MI('λ')} = ${fmtL(lam)}: ${NW(`${AX} = ${V(ax)} = ${fmtL(lam)} ${TIMES} ${V(rd.x)}`)}.`), ...lamNote(lam)];
+    bump(rs); endRound(rs, rd);
+    return;
+  }
+  rs.fb = [bad(`<span class="tag">Not ${shown(raw[0])}.</span>${why}`)]; bump(rs);
+}
+const drill2 = {
+  name: 'How much?', rounds: D2,
+  trained: `Reading the eigenvalue ${MI('λ')} from ${NW(`${AX} = ${MI('λ')}${MI('x')}`)}: longer, shorter, backwards, the same, and crushed to 0.`,
+  init(rd) { const w = rd.stage === 'work'; return { step: w ? 1 : 2, cells: w ? ['', ''] : [''], active: 0, fresh: [], tries1: 0, tries2: 0, axHelp: false, hinted: [false, false, false], done: false, ok: false, shown: false, lastWrong: null, fb: [], hints: [], fbv: 0, end: null }; },
+  task(rd, rs) {
+    let sub;
+    if (rd.stage === 'look') sub = `Yellow is ${AX}. Count grid squares: how many ${MI('x')}’s make ${AX}? ${MI('λ')} can be negative, a fraction, or 0.`;
+    else if (rd.stage === 'read') sub = `${AX} is given. Which number times ${MI('x')} gives ${AX}?`;
+    else sub = rs.step === 1 ? `First work out ${AX} as a column. Then find ${MI('λ')}.` : `Now: which number times ${MI('x')} gives ${AX}?`;
+    return { title: `${MI('x')} is an eigenvector. Find ${MI('λ')} with ${NW(`${AX} = ${MI('λ')}${MI('x')}`)}.`, sub };
+  },
+  metaRight: stepTag,
+  legend: () => ['g', 'y', 'd'],
+  visual(rd, rs, el) {
+    const s = sv('svg', { class: 'scene', role: 'img', 'aria-label': 'The arrow x and where A sends it' });
+    el.append(s);
+    const ax = mul(rd.A, rd.x), showY = rd.stage === 'look' || rs.done || (rd.stage === 'work' && rs.step === 2);
+    const items = [{ t: 'line', dir: rd.x, cls: 'dash', dash: true, w: 1.8, op: 0.7 }];
+    if (showY) items.push(isZero(ax) ? { t: 'dot', v: [0, 0], cls: 'y', r: 6 } : { t: 'arrow', v: ax, cls: 'y', w: 7, head: 17 });
+    items.push({ t: 'arrow', v: rd.x, cls: 'g', w: 3.4, head: 13 });
+    if (showY) items.push(...arrowLabels(rd.x, ax, 20)); else items.push({ t: 'label', at: rd.x, text: 'x', cls: 'g', px: 20, side: 1 });
+    painters.push(() => paintScene(s, viewR([rd.x, ax], 2, 1.3), items));
+  },
+  controls(rd, rs) {
+    const ax = mul(rd.A, rd.x);
+    const parts = [field(MI('x'), h('span', { html: V(rd.x, 'md g') }))];
+    if (rd.stage === 'work' && rs.step === 1 && !rs.done) parts.push(field(AX, cellsNode(rs, ['top of A x', 'bottom of A x'], 'col')));
+    else if (rd.stage !== 'look' || rs.done) parts.push(field(AX, h('span', { html: V(ax, 'md y') })));
+    if (rs.done) parts.push(field(MI('λ'), h('span', { class: 'lamval' }, shown(fmtL(stretchOf(rd.A, rd.x))))));
+    else if (rs.step === 2) parts.push(field(MI('λ'), cellsNode(rs, ['lambda'], 'one')));
+    return h('div', { class: 'ctl' }, ...parts, rd.stage === 'look' && !rs.done ? h('div', { class: 'eqn', html: `yellow = ${MI('λ')} ${TIMES} green` }) : null);
+  },
+  primary: (rd, rs) => (rs.done ? { label: 'Next', act: nextRound } : { label: 'Check', act: () => d2Check(rd, rs) }),
+  hint(rd, rs) {
+    if (rs.done) return null;
+    return rs.hinted[rs.step] ? { label: 'Hint', disabled: true } : { label: 'Hint', act: () => { rs.hinted[rs.step] = true; rs.hints.push({ tone: 'hint', html: `<span class="tag">Hint</span>${d2HintText(rd, rs)}` }); bump(rs); } };
+  },
+  show(rd, rs) {
+    if (rs.done) return null;
+    return () => {
+      const ax = mul(rd.A, rd.x), lam = stretchOf(rd.A, rd.x);
+      rs.done = true; rs.shown = true; rs.ok = false; rs.step = 2;
+      rs.fb = [note(`${AX} = ${sumHTML(rd.A, rd.x)}.`), note(`${NW(`${V(ax)} = ${fmtL(lam)} ${TIMES} ${V(rd.x)}`)}, so ${MI('λ')} = ${fmtL(lam)}.`), ...lamNote(lam), note('A shown answer counts as a miss.')];
+      bump(rs); endRound(rs, rd);
+    };
+  },
+  typing: (rs) => !rs.done,
+  kbd: (rs) => (rs.cells.length > 1 ? 'Type the two numbers; ↑ ↓ move between boxes. Enter checks.' : 'Type a number: 2, −1, 1/2 or 0.5. Enter checks.'),
+  result: (rs) => ({ ok: rs.ok && !rs.shown, helped: rs.hinted[1] || rs.hinted[2] || rs.tries1 + rs.tries2 > 0 }),
+  needsRetry: (rs, rd) => !rs.ok || rs.shown || (rd.stage === 'work' && (rs.hinted[1] || rs.hinted[2] || rs.tries1 + rs.tries2 > 0)),
+};
+
+// ---------------- drill 3: Hunt
+function tParts(A) {
+  const [[a, b], [c, d]] = A, p0 = tEq(A), p = p0[0] < 0 ? p0.map((n) => -n + 0) : p0;
+  const roots = realRoots(...p);
+  return { top: linT(a, b), bottom: linT(c, d), p, roots, dirs: roots.map((t) => niceDir([t, 1])) };
+}
+const setupHTML = (A) => { const q = tParts(A); return `Try ${MI('x')} = ${col('t', '1', 'in g')}. Then ${AX} = ${col(q.top, q.bottom, 'in y')}.`; };
+const ruleHTML = `${AX} is on ${MI('x')}’s line when its top is ${MI('t')} times its bottom.`;
+const eqHTML = (A) => { const q = tParts(A); return `${NW(`${q.top} = ${tTimes(q.bottom)}`)}, which is ${NW(`${poly2(...q.p)} = 0`)}`; };
+function rootsHTML(A, testWord) {
+  const q = tParts(A);
+  if (!q.roots.length) return `No real ${MI('t')} solves it, so ${MI('A')} keeps no line.`;
+  if (q.roots.length === 1) return `Only ${NW(`t = ${fmtL(q.roots[0])}`)}: the line through ${V(q.dirs[0])}.${testWord ? ` Test ${V(q.dirs[0])}.` : ''}`;
+  return `${NW(`t = ${fmtL(q.roots[0])}`)} or ${NW(`t = ${fmtL(q.roots[1])}`)}: the lines through ${V(q.dirs[0])} and ${V(q.dirs[1])}.${testWord ? ` Test one arrow on each.` : ''}`;
+}
+const xAxisHTML = (A) => `(The only line with no arrow ${col('t', '1')} is the ${XAXIS}. ${NW(`${MI('A')}${V([1, 0])} = ${V([A[0][0], A[1][0]])}`)} is off it, so it isn’t kept.)`;
+const methodHTML = (A) => `${setupHTML(A)} ${ruleHTML} So ${eqHTML(A)}. ${rootsHTML(A, false)} ${xAxisHTML(A)}`;
+const workedHTML = (A) => `<span class="tag">Worked example</span>${setupHTML(A)} ${ruleHTML} So ${eqHTML(A)}. That gives ${rootsHTML(A, false).replace(/:.*$/, '')}. Test ${tParts(A).dirs.map((d) => V(d)).join(' and ')}.`;
+function d3Hint1(A) {
+  const [[a, b], [c, d]] = A;
+  let extra = '';
+  if (b === c) extra += ` ${MI('A')} is symmetric (top-right = bottom-left), so its two lines are at right angles.`;
+  if (Math.abs(det(A)) < EPS) extra += ` det ${MI('A')} = 0, so ${MI('A')} crushes one line to 0: there ${MI('λ')} = 0.`;
+  return `<span class="tag">Hint 1</span>${setupHTML(A)} ${ruleHTML}${extra}`;
+}
+const d3Hint2 = (A) => `<span class="tag">Hint 2</span>So ${eqHTML(A)}. ${rootsHTML(A, true)}`;
+function closingWhy(lines) {
+  if (!lines.length) return `Every arrow comes out off its own line, so ${MI('A')} has no real eigenvalue.`;
+  if (lines.length === 1) return `Only one line: every other arrow gets a push along that line (on top of any stretch), so it never lands on its own line.`;
+  return `A 2 ${TIMES} 2 matrix keeps at most two lines, unless it stretches every arrow the same.`;
+}
+const chipHTML = (f) => `line ${V(f.dir)}: ${NW(`${MI('λ')} = ${fmtL(f.lam)}`)}`;
+const linesListHTML = (ls) => ls.map((l) => `the line through ${V(l.dir)} (${NW(`${MI('λ')} = ${fmtL(l.lam)}`)})`).join(' and ');
+function d3Test(rd, rs) {
+  const parsed = rs.cells.map(parseEntry), err = parsed.find((p) => p.err);
+  if (err) { rs.fb = [bad(err.err === 'empty' ? `Type both numbers of ${MI('x')} first.` : entryMsg(err.err))]; bump(rs); return; }
+  const x = parsed.map((p) => p.v);
+  if (isZero(x)) { rs.fb = [bad(`${V([0, 0])} has no direction. Pick an arrow that isn’t zero.`)]; bump(rs); return; }
+  const A = rd.A, ax = mul(A, x), r = run();
+  const prior = rs.tests.find((t) => parallel(t.x, x));
+  rs.tests.push({ x, ax });
+  if (!prior) rs.paid++;
+  rs.fresh = [true, true]; rs.active = 0;
+  const fb = [];
+  if (prior) fb.push(note(`${VL(x)} is on the same line as ${VL(prior.x)}, which you tested before. No test used.`));
+  if (onLine(A, x)) {
+    const lam = stretchOf(A, x), dir = niceDir(x);
+    const known = rs.found.some((f) => parallel(f.dir, dir));
+    if (!known) rs.found.push({ dir, lam });
+    fb.push(good(`<span class="tag">${known ? 'Same line again.' : 'Line found.'}</span>${NW(`${MI('A')}${VL(x)} = ${VL(ax)} = ${fmtL(lam)} ${TIMES} ${VL(x)}`)}. ${known ? '' : `The line through ${V(dir)} is kept, with ${MI('λ')} = ${fmtL(lam)}.`}`));
+    if (!known && !r.defSeen) { r.defSeen = true; fb.push(note(`Every non-zero arrow on this line is an eigenvector, with eigenvalue ${MI('λ')} = ${fmtL(lam)}.`)); }
+  } else {
+    fb.push(note(`${NW(`${MI('A')}${VL(x)} = ${VL(ax)}`)}: ${offStr(A, x)} off ${MI('x')}’s line, so ${MI('x')} isn’t on one of ${MI('A')}’s lines.`));
+  }
+  const all = eigenLines(A);
+  if (all.length === 2 && rs.found.length === 2) {
+    rs.done = true; rs.ok = true;
+    fb.push(good(`<span class="tag">Both lines found.</span>${closingWhy(all)}`));
+    rs.fb = fb; bump(rs); endRound(rs, rd);
+    return;
+  }
+  if (rs.paid >= TESTS) fb.push(note(`No tests left. Press That’s all the lines, then show why.`));
+  rs.fb = fb; bump(rs);
+}
+function startClaim(rd, rs) {
+  rs.mode = 'claim'; rs.cells = ['', '', '']; rs.active = 0; rs.fresh = []; rs.lastWrong = null;
+  const n = rs.found.length;
+  rs.fb = [note(`You found ${n === 0 ? 'no lines' : 'one line'}. Show there are no more: write the equation for ${MI('t')}. Its real roots give every line.`)];
+  bump(rs);
+}
+function settleClaim(rd, rs, helped) {
+  const A = rd.A, q = tParts(A), [p2, p1, p0] = q.p, disc = p1 * p1 - 4 * p2 * p0;
+  const all = eigenLines(A);
+  const discTxt = `${NW(`q² ${MINUS} 4pr = ${fmtP(p1)}² ${MINUS} 4 ${TIMES} ${fmtP(p2)} ${TIMES} ${fmtP(p0)} = ${fmt(disc)}`)}`;
+  let what;
+  if (disc < -EPS) what = `For ${NW('pt² + qt + r = 0')}: ${discTxt} is negative, so no real ${MI('t')} works. ${MI('A')} keeps no line.`;
+  else if (Math.abs(disc) <= EPS) what = `For ${NW('pt² + qt + r = 0')}: ${discTxt}, so there is one root, ${NW(`t = ${fmtL(q.roots[0])}`)}. One line, through ${V(q.dirs[0])}.`;
+  else what = `For ${NW('pt² + qt + r = 0')}: ${discTxt} is positive, so there are two roots, ${NW(`t = ${fmtL(q.roots[0])}`)} and ${NW(`t = ${fmtL(q.roots[1])}`)}. Two lines, through ${V(q.dirs[0])} and ${V(q.dirs[1])}.`;
+  const missing = all.filter((l) => !rs.found.some((f) => parallel(f.dir, l.dir)));
+  rs.done = true; rs.ok = missing.length === 0;
+  const head = helped ? bad(`<span class="tag">The equation is ${NW(`${poly2(...q.p)} = 0`)}.</span>Set top = ${MI('t')} ${TIMES} bottom: ${eqHTML(A)}.`) : good(`<span class="tag">Right: ${NW(`${poly2(...q.p)} = 0`)}.</span>`);
+  if (rs.ok) rs.fb = [head, note(what), good(`<span class="tag">${all.length ? 'That is every line.' : 'So there are no lines.'}</span>${closingWhy(all)}`)];
+  else {
+    for (const l of missing) rs.found.push({ ...l, revealed: true });
+    rs.fb = [head, note(what), bad(`<span class="tag">You missed ${missing.length === 1 ? 'a line' : 'two lines'}.</span>${linesListHTML(missing).replace(/^the/, 'The')}. ${missing.length === 1 ? 'It is' : 'They are'} drawn dashed.`)];
+  }
+  bump(rs); endRound(rs, rd);
+}
+function d3Claim(rd, rs) {
+  const raw = rs.cells.slice(), parsed = raw.map(parseEntry), err = parsed.find((p) => p.err && p.err !== 'empty');
+  if (err) { rs.fb = [bad(entryMsg(err.err))]; bump(rs); return; }
+  if (parsed.some((p) => p.err === 'empty')) { rs.fb = [bad('Fill all three boxes. Use 0 for a missing term.')]; bump(rs); return; }
+  const key = raw.join('|');
+  if (rs.lastWrong === key) { rs.fb = [...rs.fb.filter((f) => !f.same), { ...bad('That is the same answer as before. Change it first.'), same: true }]; bump(rs); return; }
+  const p = parsed.map((x) => x.v), A = rd.A, [[a, b], [c, d]] = A, w = tEq(A);
+  if (p.every((n) => Math.abs(n) < EPS)) { rs.fb = [bad(`That reads 0 = 0, which is true for every ${MI('t')}. Set top = ${MI('t')} ${TIMES} bottom, then move everything to one side.`)]; bump(rs); return; }
+  if (prop3(p, w)) { settleClaim(rd, rs, false); return; }
+  rs.claimTries++; rs.lastWrong = key; rs.fresh = [true, true, true]; rs.active = 0;
+  if (rs.claimTries >= 2) { rs.claimHelp = true; settleClaim(rd, rs, true); return; }
+  let why;
+  const flips = [0, 1, 2].filter((i) => Math.abs(w[i]) > EPS).map((i) => w.map((n, j) => (j === i ? -n : n)));
+  if (prop3(p, tEq(tr(A)))) why = `That uses ${MI('A')}’s rows as columns. ${AX}’s top is ${NW(`${fmtP(a)} ${TIMES} t + ${fmtP(b)} ${TIMES} 1`)}.`;
+  else if (prop3(p, [0, a - c, b - d])) why = `That sets top = bottom. The rule is top = ${MI('t')} ${TIMES} bottom.`;
+  else if (prop3(p, [a, b - c, -d])) why = `That is bottom = ${MI('t')} ${TIMES} top. The rule is top = ${MI('t')} ${TIMES} bottom, because ${MI('x')}’s own top is ${MI('t')} ${TIMES} its bottom.`;
+  else if (flips.some((f) => prop3(p, f))) why = `One sign is off. Write top ${MINUS} ${MI('t')} ${TIMES} bottom = 0, and multiply out with care.`;
+  else why = `Set top = ${MI('t')} ${TIMES} bottom: ${NW(`${tParts(A).top} = ${tTimes(tParts(A).bottom)}`)}. Multiply out, then move everything to one side.`;
+  rs.fb = [bad(`<span class="tag">Not quite.</span>${why}`)]; bump(rs);
+}
+const drill3 = {
+  name: 'Hunt', rounds: D3,
+  trained: `Finding every eigenvector line with ${MI('x')} = ${col('t', '1')}, and showing when there is only one line, or none.`,
+  init: (rd) => ({ mode: 'test', cells: ['', ''], active: 0, fresh: [], tests: [], paid: 0, found: [], hinted: 0, claimTries: 0, claimHelp: false, claimHinted: false, done: false, ok: false, shown: false, lastWrong: null, fb: [], hints: rd.worked ? [{ tone: 'work', html: workedHTML(rd.A) }] : [], fbv: 0, end: null, worked: !!rd.worked }),
+  task(rd, rs) {
+    if (rs.mode === 'claim' && !rs.done) return { title: 'Show there are no more lines.', sub: `Write the equation for ${MI('t')}. Use 0 for a missing term.` };
+    if (rd.worked) return { title: `Find every line that ${MI('A')} keeps.`, sub: `Read the worked example below, then test the two arrows it gives.` };
+    return { title: `Find every line that ${MI('A')} keeps.`, sub: `Test arrows ${MI('x')} to see ${AX} (${TESTS} tests). Got every line? Press That’s all the lines.` };
+  },
+  metaRight: (rd, rs) => h('span', { class: 'pips', 'aria-label': `${TESTS - rs.paid} tests left` }, h('span', {}, 'Tests left'), ...Array.from({ length: TESTS }, (_, i) => h('span', { class: 'pip' + (i < TESTS - rs.paid ? ' on' : '') }))),
+  legend: () => ['g', 'y', 'v'],
+  visual(rd, rs, el) {
+    const s = sv('svg', { class: 'scene', role: 'img', 'aria-label': 'Your tests and the lines found' });
+    el.append(s);
+    if (!rs.tests.length && !rs.found.length) el.classList.add('idle');
+    const items = [];
+    for (const f of rs.found) items.push({ t: 'line', dir: f.dir, cls: 'found', w: f.revealed ? 2 : 2.6, dash: !!f.revealed, op: 0.9 });
+    const last = rs.tests[rs.tests.length - 1];
+    rs.tests.forEach((tt, i) => {
+      const isLast = i === rs.tests.length - 1, op = isLast ? 1 : 0.28;
+      if (isLast && !onLine(rd.A, tt.x)) items.push({ t: 'line', dir: tt.x, cls: 'dash', dash: true, w: 1.6, op: 0.7 });
+      if (isZero(tt.ax)) items.push({ t: 'dot', v: [0, 0], cls: 'y', r: 5, op });
+      else items.push({ t: 'arrow', v: tt.ax, cls: 'y', w: isLast ? 6 : 3.5, head: isLast ? 15 : 10, op });
+      items.push({ t: 'arrow', v: tt.x, cls: 'g', w: isLast ? 3 : 2, head: isLast ? 12 : 8, op });
+    });
+    if (last) items.push(...arrowLabels(last.x, last.ax, 19));
+    for (const f of rs.found) items.push({ t: 'linelabel', dir: f.dir, text: `λ = ${fmtL(f.lam)}`, px: 15 });
+    const R = last ? Math.min(40, viewR([last.x, last.ax], 3, 1.25)) : 4;
+    painters.push(() => paintScene(s, R, items));
+  },
+  controls(rd, rs) {
+    const chips = h('div', { class: 'chips', 'aria-label': 'Lines found' }, ...(rs.found.length
+      ? rs.found.map((f) => h('span', { class: 'chip' + (f.revealed ? ' rev' : ''), html: chipHTML(f) }))
+      : [h('span', { class: 'chip empty' }, 'No lines found yet')]));
+    if (rs.done) return h('div', { class: 'ctl' }, chips);
+    if (rs.mode === 'claim') {
+      const q = tParts(rd.A);
+      return h('div', { class: 'claim' },
+        h('div', { class: 'setup', html: `With ${MI('x')} = ${col('t', '1', 'in g')}: ${AX} = ${col(q.top, q.bottom, 'in y')}. Kept when top = ${MI('t')} ${TIMES} bottom.` }),
+        cellsNode(rs, ['number in front of t squared', 'number in front of t', 'number on its own'], 'row', [' t² + ', ' t + ', ' = 0']),
+        chips);
+    }
+    return h('div', { class: 'ctl' },
+      field(MI('x'), cellsNode(rs, ['top number of x', 'bottom number of x'], 'col')),
+      h('div', { class: 'side' }, chips, rs.paid < TESTS ? h('button', { class: 'btn small', id: 'btn-all', onclick: () => { startClaim(rd, rs); wantCellFocus = true; render(); } }, 'That’s all the lines') : null));
+  },
+  primary(rd, rs) {
+    if (rs.done) return { label: 'Next', act: nextRound };
+    if (rs.mode === 'claim') return { label: 'Check', act: () => d3Claim(rd, rs) };
+    if (rs.paid >= TESTS) return { label: 'That’s all the lines', act: () => { startClaim(rd, rs); wantCellFocus = true; } };
+    return { label: 'Test', act: () => d3Test(rd, rs) };
+  },
+  hint(rd, rs) {
+    if (rs.done || rd.worked) return null;
+    if (rs.mode === 'claim') {
+      return rs.claimHinted || rs.hinted >= 2 ? { label: 'Hint', disabled: true } : { label: 'Hint', act: () => { rs.claimHinted = true; rs.hints.push({ tone: 'hint', html: `<span class="tag">Hint</span>Set top = ${MI('t')} ${TIMES} bottom: ${NW(`${tParts(rd.A).top} = ${tTimes(tParts(rd.A).bottom)}`)}. Multiply out, then move everything to one side.` }); bump(rs); } };
+    }
+    if (rs.hinted >= 2) return { label: 'Hint 2', disabled: true };
+    return { label: rs.hinted ? 'Hint 2' : 'Hint', act: () => { rs.hinted++; rs.hints.push({ tone: 'hint', html: rs.hinted === 1 ? d3Hint1(rd.A) : d3Hint2(rd.A) }); bump(rs); } };
+  },
+  show(rd, rs) {
+    if (rs.done) return null;
+    return () => {
+      const all = eigenLines(rd.A);
+      for (const l of all) if (!rs.found.some((f) => parallel(f.dir, l.dir))) rs.found.push({ ...l, revealed: true });
+      rs.done = true; rs.shown = true; rs.ok = false;
+      rs.fb = [note(all.length ? `<b>${all.length === 1 ? 'Line' : 'Lines'}:</b> ${linesListHTML(all)}.` : `<b>No lines.</b> ${closingWhy(all)}`), more('How to find them', methodHTML(rd.A)), note('A shown answer counts as a miss.')];
+      bump(rs); endRound(rs, rd);
+    };
+  },
+  typing: (rs) => !rs.done,
+  kbd: (rs) => (rs.mode === 'claim' ? 'Type the three numbers; ← → move between boxes. Enter checks.' : 'Type the two numbers; ↑ ↓ move between boxes. Enter tests.'),
+  result: (rs) => ({ ok: rs.ok && !rs.shown, helped: rs.hinted > 0 || rs.claimHelp || rs.claimHinted || rs.worked, worked: rs.worked }),
+  needsRetry: (rs) => !rs.ok || rs.shown || rs.hinted >= 2 || rs.claimHelp,
+};
+
+const DR = { 1: drill1, 2: drill2, 3: drill3 };
+
+// ------------------------------------------------------------------ typing numbers
+function cellsNode(rs, labels, layout, after) {
+  const wrap = h('span', { class: `cells ${layout}` });
+  rs.cells.forEach((val, i) => {
+    const active = rs.active === i;
+    const c = h('div', {
+      class: 'cell' + (active ? ' active' : '') + (val ? '' : ' empty') + (val && rs.fresh[i] ? ' fresh' : ''),
+      id: `cell-${i}`, role: 'textbox', 'aria-label': labels[i], tabindex: '0',
+      onclick: () => { if (rs.active !== i) { rs.active = i; render(); } },
+      onfocus: () => { if (rs.active !== i) { rs.active = i; render(); } },
+    }, h('span', { class: 'val' }, val ? shown(val) : '?'));
+    if (active) c.append(h('span', { class: 'caret', 'aria-hidden': 'true' }));
+    wrap.append(c);
+    if (after && after[i]) wrap.append(h('span', { class: 'tv' }, after[i]));
+  });
+  return wrap;
+}
+function editCell(rs, key) {
+  const i = rs.active ?? 0;
+  let s = rs.cells[i] || '';
+  // after a check, the first key replaces the old answer (as if it were selected)
+  if (rs.fresh[i]) { rs.fresh[i] = false; s = ''; }
+  if (key === 'back') s = s.slice(0, -1);
+  else if (key === 'neg') s = s.startsWith('-') ? s.slice(1) : '-' + s;
+  else if (key === '/') { if (!s.includes('/') && /\d$/.test(s)) s += '/'; }
+  else if (key === '.') { const part = s.split('/').pop(); if (!part.includes('.')) s += /\d$/.test(part) ? '.' : '0.'; }
+  else if (/^\d$/.test(key)) { if (s.replace(/[-./]/g, '').length < 6) s += key; }
+  rs.cells[i] = s;
+}
+function typingRs() {
+  const r = run();
+  if (r.phase !== 'play' || !r.rs || r.rs.end) return null;
+  return DR[state.drill].typing(r.rs) && Array.isArray(r.rs.cells) ? r.rs : null;
+}
+function press(key) {
+  const rs = typingRs(); if (!rs) return;
+  if (key === 'next') rs.active = ((rs.active ?? 0) + 1) % rs.cells.length;
+  else if (key === 'prev') rs.active = ((rs.active ?? 0) + rs.cells.length - 1) % rs.cells.length;
+  else editCell(rs, key);
+  render();
+}
+function doPrimary() {
+  if (!primary || primary.disabled || !primary.act) return;
+  if (performance.now() < lockUntil) return;
+  primary.act();
+  render();
+}
+
+// ------------------------------------------------------------------ rendering
+const tabsEl = $('tabs'), stageEl = $('stage'), taskEl = $('task'), visualEl = $('visual'), controlsEl = $('controls'), fbEl = $('feedback'), actionsEl = $('actions'), keypadEl = $('keypad'), kbdEl = $('kbdnote'), dockEl = $('dock');
+
+function legendRow(keys, d) {
+  const L = { g: ['g', `${MI('x')}: ${d === 3 ? 'your arrow' : 'the arrow'}`], y: ['y', `${AX}: where ${MI('A')} sends it`], d: ['d', `the line through ${MI('x')}`], v: ['v', 'a kept line'] };
+  return keys.length ? h('div', { class: 'legend' }, ...keys.map((k) => h('span', {}, h('i', { class: `sw ${L[k][0]}` }), h('span', { html: L[k][1] })))) : null;
+}
+const dotClass = (res) => (res ? (res.ok ? (res.helped ? 'help' : 'ok') : 'miss') : '');
+function dotsRow(r, withNow) {
+  return h('div', { class: 'dots', 'aria-hidden': 'true' }, ...r.queue.map((_, i) => h('span', { class: `dot ${withNow && i === r.pos ? 'now' : dotClass(r.results[i])}` })));
+}
+function metaRow(r, right) {
+  const it = r.queue[r.pos];
+  return h('div', { class: 'meta' },
+    h('span', {}, `Round ${r.pos + 1} of ${r.queue.length}`),
+    it.kind === 'retry' ? h('span', { class: 'again' }, 'Retry, new numbers') : null,
+    dotsRow(r, true), right);
+}
+const matBlock = (A) => h('div', { class: 'amat', 'aria-label': `A = matrix with rows ${A[0].map(fmt).join(', ')} and ${A[1].map(fmt).join(', ')}` }, h('span', { class: 'mi' }, 'A'), h('span', {}, '='), h('span', { class: 'mat' }, ...A.flat().map((n) => h('span', {}, fmt(n)))));
+
+function renderFeedback(items, key) {
+  const nodes = items.map((f) => (f.tone === 'more'
+    ? h('details', { class: 'note' }, h('summary', {}, f.summary), h('div', { html: f.html }))
+    : h('p', { class: f.tone, html: f.html })));
+  fill(fbEl, ...nodes);
+  const changed = key !== lastFbKey;
+  if (changed && nodes.length) fbEl.classList.remove('pop'), void fbEl.offsetWidth, fbEl.classList.add('pop');
+  lastFbKey = key;
+}
+
+function renderTabs() {
+  fill(tabsEl, ...[1, 2, 3].map((d) => h('button', {
+    class: 'tab', role: 'tab', id: `tab-${d}`, 'aria-selected': String(state.drill === d),
+    onclick: () => { if (state.drill !== d) { state.drill = d; render(); } },
+  }, h('span', { class: 'n' }, String(d)), DR[d].name, state.best[d] ? h('span', { class: 'ck', 'aria-label': 'done' }, '✓') : null)));
+}
+
+function renderKeypad(show, many) {
+  keypadEl.hidden = !show;
+  if (!show) { fill(keypadEl); return; }
+  const keys = [['1'], ['2'], ['3'], ['4'], ['5'], ['6'], ['7'], ['8'], ['9'], ['0'], ['neg', MINUS, 'minus sign'], ['.', '.', 'point'], ['/', '/', 'fraction bar'], ['next', 'next', 'next box'], ['back', '⌫', 'delete']];
+  fill(keypadEl, ...keys.map(([k, label, aria]) => h('button', {
+    class: 'key' + (k.length > 1 || '/.'.includes(k) ? ' fn' : '') + (k === 'back' ? ' wide' : ''), id: `key-${k === '.' ? 'dot' : k === '/' ? 'slash' : k}`,
+    'aria-label': aria || k, disabled: k === 'next' && !many ? true : null,
+    onclick: () => press(k),
+  }, label || k)));
+}
+
+function actionButtons(hint, show, pr, onHint, onShow) {
+  return [
+    hint ? h('button', { class: 'btn ghost', id: 'btn-hint', disabled: hint.disabled ? true : null, onclick: hint.act ? onHint : null }, hint.label) : null,
+    show ? h('button', { class: 'btn ghost', id: 'btn-show', onclick: onShow }, 'Show answer') : null,
+    h('button', { class: 'btn primary', id: 'btn-primary', disabled: pr.disabled ? true : null, onclick: doPrimary }, pr.label),
+  ];
+}
+
+function renderPlay(d, r) {
+  const D = DR[d], it = r.queue[r.pos], rd = roundData(d, it);
+  if (!r.rs) r.rs = D.init(rd, seedFor(r, it));
+  const rs = r.rs, t = D.task(rd, rs);
+  fill(taskEl, metaRow(r, D.metaRight(rd, rs)),
+    h('div', { class: 'taskrow' }, h('div', { class: 'tasktext' }, h('h1', { html: t.title }), t.sub ? h('p', { html: t.sub }) : null), matBlock(rd.A)),
+    legendRow(D.legend(rd, rs), d));
+  fill(visualEl);
+  visualEl.className = 'visual';
+  D.visual(rd, rs, visualEl);
+  const c = D.controls(rd, rs);
+  fill(controlsEl, c);
+  controlsEl.hidden = !c;
+  renderFeedback([...rs.hints, ...rs.fb], `${d}:${r.pos}:${r.queue.length}:${rs.fbv}`);
+  const hint = D.hint(rd, rs), show = D.show(rd, rs), pr = D.primary(rd, rs);
+  fill(actionsEl, ...actionButtons(hint, show, pr,
+    () => { if (hint && hint.act) { hint.act(); wantCellFocus = true; render(); } },
+    () => { if (show) { show(); render(); } }));
+  const typing = !!typingRs();
+  renderKeypad(typing, typing && rs.cells.length > 1);
+  kbdEl.textContent = typing ? D.kbd(rs) : '';
+  return pr;
+}
+
+function renderWhy(d, r) {
+  const q = WHY[d];
+  if (!r.why) r.why = { order: shuffle([0, 1, 2, 3, 4], mulberry32(r.seed + 5)), sel: [false, false, false, false, false], checked: false };
+  const w = r.why;
+  fill(taskEl, h('div', { class: 'meta' }, h('span', {}, 'Last step'), dotsRow(r, false)),
+    h('div', { class: 'taskrow' }, h('div', { class: 'tasktext' }, h('h1', {}, 'One question before you finish'), h('p', {}, 'Tick every true statement, then press Check.'))));
+  const list = h('div', { class: 'stmts' }, ...w.order.map((k, j) => {
+    const s = q.items[k], picked = !!w.sel[k];
+    const cls = 'stmt' + (w.checked ? (picked === s.ok ? ' right' : ' wrong') : '');
+    return h('button', { class: cls, id: `stmt-${j}`, 'aria-pressed': String(picked), disabled: w.checked || null, onclick: () => { w.sel[k] = !w.sel[k]; render(); } },
+      h('span', { class: 'box', 'aria-hidden': 'true' }, picked ? '✓' : ''),
+      h('span', { class: 'st' }, h('span', { html: s.t }), w.checked ? h('span', { class: 'sw-why', html: `<b>${s.ok ? 'True' : 'False'}.</b> ${s.why}` }) : null),
+      w.checked ? h('span', { class: 'mark', 'aria-hidden': 'true' }, picked === s.ok ? '✓' : '✗') : null);
+  }));
+  visualEl.className = 'visual';
+  fill(visualEl, h('div', { class: 'card' }, h('h2', { html: q.q }), list));
+  fill(controlsEl); controlsEl.hidden = true;
+  const right = q.items.filter((s, k) => !!w.sel[k] === s.ok).length;
+  renderFeedback(w.checked ? [right === 5 ? good('<span class="tag">All 5 right.</span>') : bad(`<span class="tag">${right} of 5 right.</span>Each statement says why.`)] : [], `${d}:why:${w.checked}`);
+  const pr = w.checked
+    ? { label: 'See results', act: () => { r.phase = 'done'; recordBest(d, r); } }
+    : { label: 'Check', act: () => { w.checked = true; w.right = q.items.filter((s, k) => !!w.sel[k] === s.ok).length; scrollFb = true; }, disabled: !w.sel.some(Boolean) };
+  fill(actionsEl, ...actionButtons(null, null, pr));
+  renderKeypad(false); kbdEl.textContent = '';
+  return pr;
+}
+
+function tally(r) {
+  const rows = r.queue.map((it, i) => ({ it, res: r.results[i] })).filter((x) => x.res);
+  const main = rows.filter((x) => x.it.kind === 'main' && !x.res.worked);
+  const retries = rows.filter((x) => x.it.kind === 'retry');
+  return {
+    total: main.length,
+    clean: main.filter((x) => x.res.ok && !x.res.helped).length,
+    helped: main.filter((x) => x.res.ok && x.res.helped).length,
+    retries: retries.length,
+    retriesOk: retries.filter((x) => x.res.ok).length,
+  };
+}
+function recordBest(d, r) {
+  const t = tally(r), prev = state.best[d];
+  if (!prev || t.clean > prev.clean) state.best[d] = { clean: t.clean, total: t.total };
+}
+function renderDone(d, r) {
+  const D = DR[d], t = tally(r), w = r.why || {};
+  fill(taskEl, h('div', { class: 'meta' }, h('span', {}, `Drill ${d} of 3`), dotsRow(r, false)),
+    h('div', { class: 'taskrow' }, h('div', { class: 'tasktext' }, h('h1', {}, `Done: ${D.name}`), h('p', { html: D.trained }))));
+  const facts = [
+    t.helped ? `${t.helped} more right after a hint or a second try` : null,
+    t.retries ? `Retries: ${t.retriesOk} of ${t.retries} right` : 'No retries needed',
+    w.checked ? (w.right === 5 ? 'Question: all 5 statements right' : `Question: ${w.right} of 5 statements right`) : null,
+    d === 3 ? 'Round 1 was a worked example, so it isn’t scored' : null,
+  ].filter(Boolean);
+  const next = d === 1 ? `Next, “How much?”: find ${MI('λ')} for arrows that ${MI('A')} keeps.` : d === 2 ? `Next, “Hunt”: find the lines yourself, with ${TESTS} tests.` : `That’s all three drills. Play any of them again from the tabs at the top.`;
+  const card = h('div', { class: 'card' },
+    h('div', { class: 'score' }, h('b', {}, `${t.clean}/${t.total}`), h('span', {}, 'right with no help')),
+    h('ul', { class: 'facts' }, ...facts.map((f) => h('li', {}, f))),
+    h('div', { class: 'key-row', 'aria-hidden': 'true' }, h('span', {}, h('i', { class: 'dot ok' }), 'right'), h('span', {}, h('i', { class: 'dot help' }), 'right with help'), h('span', {}, h('i', { class: 'dot miss' }), 'missed')),
+    h('div', { class: 'def', html: DEF_SENTENCE }),
+    h('p', { html: next }));
+  visualEl.className = 'visual';
+  fill(visualEl, card);
+  fill(controlsEl); controlsEl.hidden = true;
+  renderFeedback([], `${d}:done`);
+  const again = () => { state.runs[d] = newRun(d); render(); };
+  const pr = d < 3 ? { label: `Next: ${DR[d + 1].name}`, act: () => { state.drill = d + 1; } } : { label: 'Back to drill 1', act: () => { state.drill = 1; } };
+  fill(actionsEl, h('button', { class: 'btn ghost', id: 'btn-again', onclick: again }, d < 3 ? 'Play again' : 'Play Hunt again'), h('button', { class: 'btn primary', id: 'btn-primary', onclick: doPrimary }, pr.label));
+  renderKeypad(false); kbdEl.textContent = '';
+  return pr;
+}
+
+const activeCellId = () => { const rs = typingRs(); return rs ? `cell-${rs.active ?? 0}` : null; };
+function render() {
+  const ae = document.activeElement;
+  let focusId = ae && ae !== document.body ? ae.id : null;
+  if (focusId && focusId.startsWith('cell-')) focusId = activeCellId();
+  painters = [];
+  renderTabs();
+  const d = state.drill, r = state.runs[d];
+  stageEl.dataset.phase = r.phase;
+  let pr;
+  if (r.phase === 'play') pr = renderPlay(d, r);
+  else if (r.phase === 'why') pr = renderWhy(d, r);
+  else pr = renderDone(d, r);
+  // a main button that has just changed meaning ignores taps for a moment, so a double tap can't skip ahead
+  if (pr.label !== lastPrimaryLabel) { lockUntil = performance.now() + LOCK_MS; lastPrimaryLabel = pr.label; }
+  primary = pr;
+  for (const p of painters) p();
+  if (wantCellFocus) { focusId = activeCellId() || focusId; wantCellFocus = false; }
+  if (focusId) { const e = document.getElementById(focusId); if (e && e !== document.activeElement && !e.disabled) e.focus({ preventScroll: true }); }
+  if (scrollFb) { scrollFb = false; revealFeedback(); }
+  try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) { /* storage is optional */ }
+}
+// new feedback must not hide under the pinned dock
+function revealFeedback() {
+  if (!fbEl.firstChild) return;
+  const fr = fbEl.getBoundingClientRect(), dr = dockEl.getBoundingClientRect();
+  if (fr.top > dr.top - 28 || fr.bottom > dr.top) {
+    fbEl.style.scrollMarginBottom = `${Math.ceil(dr.height) + 10}px`;
+    fbEl.style.scrollMarginTop = '10px';
+    fbEl.scrollIntoView({ block: fr.height > dr.top * 0.6 ? 'start' : 'end' });
+  }
+}
+
+// the keyboard, for desktop: digits, minus, point and slash type into the active box; arrows move; Enter = the main button
+document.addEventListener('keydown', (e) => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const a = document.activeElement;
+  const onButton = a instanceof HTMLButtonElement || (a && a.tagName === 'SUMMARY');
+  if (e.key === 'Enter') {
+    if (e.repeat) { e.preventDefault(); return; }
+    if (!onButton) { e.preventDefault(); doPrimary(); }
+    return;
+  }
+  const rs = typingRs();
+  if (!rs) return;
+  const k = e.key;
+  const typed = /^\d$/.test(k) || k === '.' || k === '/' ? k : k === '-' || k === '−' ? 'neg' : k === 'Backspace' ? 'back' : null;
+  if (typed) { e.preventDefault(); press(typed); }
+  else if ((k === 'ArrowDown' || k === 'ArrowRight') && rs.cells.length > 1 && !onButton) { e.preventDefault(); press('next'); }
+  else if ((k === 'ArrowUp' || k === 'ArrowLeft') && rs.cells.length > 1 && !onButton) { e.preventDefault(); press('prev'); }
+  else return;
+  // typing brings focus to the box being typed in, so Enter then runs the main button
+  const cell = document.getElementById(`cell-${rs.active ?? 0}`);
+  if (cell && cell !== document.activeElement) cell.focus({ preventScroll: true });
+});
+
+let raf = 0;
+new ResizeObserver(() => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => { for (const p of painters) p(); }); }).observe(visualEl);
+
+function valid(s) {
+  try {
+    if (!s || s.v !== 2 || ![1, 2, 3].includes(s.drill) || !s.runs) return false;
+    for (const d of [1, 2, 3]) {
+      const r = s.runs[d], n = DR[d].rounds.length;
+      if (!r || !Array.isArray(r.queue) || !Array.isArray(r.results) || !['play', 'why', 'done'].includes(r.phase)) return false;
+      if (!Number.isInteger(r.pos) || r.pos < 0 || r.pos > r.queue.length || (r.phase === 'play' && r.pos >= r.queue.length)) return false;
+      if (!r.queue.every((it) => it && (it.kind === 'main' || it.kind === 'retry') && Number.isInteger(it.i) && it.i >= 0 && it.i < n)) return false;
+    }
+    return true;
+  } catch (e) { return false; }
+}
+function start(data) {
+  let saved = data && data.state;
+  if (!valid(saved)) { try { saved = JSON.parse(localStorage.getItem(STORE) || 'null'); } catch (e) { saved = null; } }
+  state = valid(saved) ? saved : freshState();
+  state.best = state.best || {};
+  window.claude?.hot?.snapshot?.(() => ({ state }));
+  try { render(); } catch (e) { state = freshState(); render(); }
+}
+window.__drills = { state: () => state, D1, D2, D3, WHY, eigenLines, onLine, stretchOf, offLineDeg, niceDir, tParts, tEq, prop3, methodHTML, parseEntry, mul, reset: () => { state = freshState(); render(); } };
+window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+})();
+</script>

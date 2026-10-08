@@ -1,0 +1,33 @@
+// The textbook name of each chapter's topic, for the chapter map, its search box and the menus.
+// The story titles stay; these are the words a course or a textbook uses.
+// `also`: extra words a search should find (other names for the same thing).
+export const TOPICS: Record<string, { name: string; also?: string }> = {
+  c00: { name: 'Linear transformations: a first look' },
+  c01: { name: 'Vectors', also: 'addition scaling magnitude norm' },
+  c02: { name: 'Linear combinations and span' },
+  c03: { name: 'Linear independence', also: 'dependence' },
+  c04: { name: 'Dot product', also: 'inner product scalar product angle projection' },
+  c05: { name: 'Cross product', also: 'normal vector vector product' },
+  c06: { name: 'Scalar triple product', also: 'volume' },
+  c07: { name: 'Lines and planes', also: 'equation of a line equation of a plane intersection' },
+  c08: { name: 'Systems of linear equations', also: 'simultaneous equations' },
+  c09: { name: 'Gaussian elimination', also: 'row reduction row operations echelon' },
+  c10: { name: 'Reduced row echelon form', also: 'RREF general solution parametric solution' },
+  c11: { name: 'Matrices as linear transformations', also: 'linear map rotation reflection' },
+  c12: { name: 'Matrix multiplication', also: 'composition matrix product' },
+  c13: { name: 'Inverse matrices', also: 'invertible' },
+  c14: { name: 'Determinants', also: 'det area volume scale factor' },
+  c15: { name: 'Column space and null space', also: 'range image kernel' },
+  c16: { name: 'Basis, dimension and rank', also: 'nullity rank-nullity' },
+  c17: { name: 'Change of basis', also: 'coordinates similar' },
+  c18: { name: 'Eigenvalues and eigenvectors', also: 'characteristic equation' },
+  c19: { name: 'Diagonalisation', also: 'diagonalization matrix powers' },
+  c20: { name: 'Markov chains', also: 'stochastic matrix probability steady state' },
+  c21: { name: 'Orthogonal projection', also: 'orthogonal perpendicular' },
+  c22: { name: 'Gram–Schmidt and QR', also: 'orthonormal basis gram schmidt' },
+  c23: { name: 'Least squares', also: 'regression best fit normal equations' },
+  c24: { name: 'Symmetric matrices and quadratic forms', also: 'spectral theorem orthogonal diagonalisation' },
+  c25: { name: 'Singular value decomposition (SVD)' },
+  c26: { name: 'Principal component analysis (PCA)', also: 'variance covariance data' },
+  c27: { name: 'Neural network layers', also: 'machine learning AI' },
+};

@@ -1,0 +1,78 @@
+/* Act IX · Singular (Chapters 24–26): chapter-local styles, scoped by a9- classes. */
+
+/* tags in the scene */
+.g-label.a9-tag { font-family: var(--mono); font-size: 12.5px; font-weight: 600; color: var(--ink); padding: 1px 7px; border-radius: 999px; background: rgba(6, 10, 22, 0.76); border: 1px solid rgba(232, 241, 255, 0.22); white-space: nowrap; pointer-events: none; }
+.g-label.a9-tag.y { color: var(--result); border-color: rgba(255, 209, 102, 0.45); }
+.g-label.a9-tag.g { color: var(--v); border-color: rgba(61, 220, 132, 0.45); }
+.g-label.a9-tag.r { color: var(--w); border-color: rgba(255, 92, 108, 0.45); }
+.g-label.a9-tag.b { color: var(--u); border-color: rgba(77, 163, 255, 0.5); }
+.g-label.a9-tag.vi { color: var(--violet); border-color: rgba(179, 136, 255, 0.5); }
+.g-label.a9-tag.o { color: var(--orange); border-color: rgba(255, 159, 67, 0.5); }
+.g-label.a9-tag.c { color: var(--accent); border-color: rgba(89, 225, 255, 0.45); }
+.g-label.a9-tag.dim { opacity: 0.62; }
+.g-label.a9-cap { font-size: 11.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-2); white-space: nowrap; padding: 2px 9px; border-radius: 6px; background: rgba(6, 10, 22, 0.62); pointer-events: none; }
+.g-label.a9-board { font-size: 15px; color: var(--ink); white-space: nowrap; padding: 8px 14px; border-radius: 10px; background: rgba(6, 10, 22, 0.84); border: 1px solid rgba(160, 190, 230, 0.25); pointer-events: none; }
+.g-label.a9-board.step { font-size: 14px; color: var(--accent); border-color: rgba(89, 225, 255, 0.35); max-width: 560px; white-space: normal; text-align: center; }
+.g-label.a9-board.good { color: var(--good); border-color: rgba(61, 220, 132, 0.45); }
+.g-label.a9-board.bad { color: #ffb347; border-color: rgba(255, 159, 67, 0.5); }
+
+/* dock rows */
+.a9-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 14px; }
+.a9-row .k { color: var(--ink-2); }
+.a9-col { display: flex; flex-direction: column; gap: 8px; }
+.a9-msg { font-size: 13px; color: var(--ink-2); min-height: 18px; line-height: 1.45; max-width: 470px; }
+.a9-msg.good { color: var(--good); }
+.a9-msg.bad { color: #ffb347; }
+.a9-btns { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.a9-in .cell { width: 62px; height: 34px; }
+.a9-num { width: 84px; }
+.a9-kick { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.a9-note { font-size: 12.5px; color: var(--muted); line-height: 1.45; max-width: 470px; }
+.a9-checks { display: flex; flex-direction: column; gap: 4px; font-size: 13.5px; color: var(--ink-2); }
+.a9-checks .ok { color: var(--good); }
+.a9-big { font-family: var(--mono); font-size: 22px; letter-spacing: 0.02em; color: var(--ink); }
+.a9-big .dim { color: var(--muted); }
+
+/* choice chips (axes, components) */
+.a9-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.a9-chip { font: inherit; font-size: 13px; padding: 5px 10px; border-radius: 999px; border: 1px solid rgba(160, 190, 230, 0.3); background: rgba(16, 24, 42, 0.9); color: var(--ink); cursor: pointer; }
+.a9-chip:hover { border-color: rgba(89, 225, 255, 0.6); }
+.a9-chip.on { border-color: var(--result); color: var(--result); box-shadow: 0 0 0 2px rgba(255, 209, 102, 0.2); }
+.a9-chip:disabled { opacity: 0.45; cursor: default; }
+
+/* bars (singular values, explained variance) */
+.a9-bars { display: flex; align-items: flex-end; gap: 3px; height: 96px; padding: 6px 6px 0; border-radius: 8px; background: rgba(4, 8, 18, 0.5); border: 1px solid rgba(160, 190, 230, 0.16); }
+.a9-bars .b { flex: 1; min-width: 4px; border-radius: 3px 3px 0 0; background: rgba(160, 190, 230, 0.35); position: relative; transition: background 0.25s, height 0.3s; }
+.a9-bars .b.on { background: var(--result); }
+.a9-bars .b.cut { background: rgba(160, 190, 230, 0.18); }
+.a9-bars .b span { position: absolute; bottom: 100%; left: 50%; translate: -50% -2px; font-size: 10px; font-family: var(--mono); color: var(--ink-2); white-space: nowrap; }
+.a9-bars-axis { display: flex; gap: 3px; padding: 2px 6px 0; font-size: 10px; font-family: var(--mono); color: var(--muted); }
+.a9-bars-axis span { flex: 1; text-align: center; }
+.a9-meter { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--ink-2); }
+.a9-meter .bar { position: relative; width: 190px; height: 9px; border-radius: 999px; background: rgba(140, 180, 255, 0.14); overflow: hidden; }
+.a9-meter .bar span { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 999px; background: var(--accent); transition: width 0.35s ease; }
+.a9-meter .bar i { position: absolute; top: -2px; bottom: -2px; width: 2px; background: var(--result); }
+.a9-meter .val { font-family: var(--mono); color: var(--ink); min-width: 58px; }
+
+/* the spectrogram (Teo's voice) */
+.a9-spec { display: flex; gap: 10px; align-items: flex-start; }
+.a9-spec figure { margin: 0; display: flex; flex-direction: column; gap: 4px; align-items: center; }
+.a9-spec canvas { width: 150px; height: 150px; image-rendering: pixelated; border-radius: 6px; border: 1px solid rgba(160, 190, 230, 0.25); background: #050914; }
+.a9-spec figcaption { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.a9-words { font-family: var(--mono); font-size: 15px; color: #9fefe6; letter-spacing: 0.02em; min-height: 22px; padding: 4px 8px; border-radius: 8px; background: rgba(4, 8, 18, 0.6); border: 1px solid rgba(159, 239, 230, 0.2); }
+.a9-words.clear { border-color: rgba(159, 239, 230, 0.55); }
+
+/* the readings table (Show more decimals) */
+.a9-table { display: grid; grid-template-columns: auto auto auto auto; gap: 4px 16px; font-family: var(--mono); font-size: 15px; align-items: baseline; }
+.a9-table .h { font-family: inherit; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.a9-table .thin { color: var(--violet); }
+
+/* cards on the settings rail */
+.a9-rail { display: flex; flex-direction: column; gap: 8px; }
+.a9-palette { display: flex; flex-wrap: wrap; gap: 6px; }
+.a9-track { display: flex; align-items: center; gap: 6px; padding: 8px 10px; border-radius: 12px; min-height: 52px; background: rgba(4, 8, 18, 0.55); border: 1px dashed rgba(160, 190, 230, 0.28); flex-wrap: wrap; }
+.a9-track .empty { color: var(--muted); font-size: 13px; padding: 0 6px; }
+.a9-card { font: inherit; font-size: 15px; min-width: 44px; padding: 6px 10px; border-radius: 10px; background: rgba(16, 24, 42, 0.92); border: 1px solid rgba(160, 190, 230, 0.25); color: var(--ink); cursor: pointer; }
+.a9-card.cu { border-color: rgba(239, 154, 92, 0.6); }
+.a9-card.used { opacity: 0.35; }
+.a9-order { font-size: 12px; color: var(--muted); }
