@@ -192,6 +192,11 @@ export class Runner {
   }
 
   async runBeat(ch: ChapterDef, beat: Beat): Promise<void> {
+    const calm = beat.kind === 'puzzle' ? beat.puzzle.calm ?? ch.calm : ch.calm;
+    if (document.body.classList.contains('calm') !== !!calm) {
+      document.body.classList.toggle('calm', !!calm);
+      if (this.bloomBase !== null) this.g.stage.bloom.strength = calm ? Math.min(this.bloomBase, 0.3) : this.bloomBase;
+    }
     switch (beat.kind) {
       case 'scene': {
         this.hud.hideObjective();
