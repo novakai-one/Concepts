@@ -1,24 +1,72 @@
-// Chapter 3 staging: the cold open (a spare thruster that adds nothing), the holotable, and the end
-// of Act I (the Lantern lifts off the plane; the Meridian comes into view, every frame sheared).
+// Chapter 3 staging: the opening (v and w reach a plane; u lies in it), the picture behind the name card (the
+// closed triangle v + 2w − u = 0), and the end of Act I (the Lantern lifts off the plane; the Meridian, sheared).
 import { Box3, Group, Matrix4, Vector3, type Object3D } from 'three';
 import type { Game, V3 } from '../../../game/types';
-import { Arrow } from '../../../gfx/arrow';
-import { Beacon } from '../../../gfx/markers';
+import { PlanePatch } from '../../../gfx/shapes';
 import { loadModel } from '../../../gfx/models';
-import { C } from '../../../core/theme';
 import { animate, ease, wait } from '../../../core/tween';
 import { sfx } from '../../../audio/sfx';
 import { music } from '../../../audio/music';
 import { fadeBlack, letterbox, titleCard, stamp } from '../../../kit/cine';
 import { makeAnchor, makeLantern } from '../../common/set';
-import { bridgeShot } from '../../common/shots';
 import { answer } from '../../../game/caseboard';
-import { ReachGlow } from '../c02-span/reach';
-import { own, to3 } from '../c02-span/rig';
-import { THRUST3, SIGNAL, SPARE_BAD } from './logic';
+import { Space, mul3, to3, worldHost } from './space';
+import { TITLE, U, V, W } from './text';
+import { VIEW } from './tryit';
 import { S } from './script';
 
-const T0 = to3(THRUST3[0]), T1 = to3(THRUST3[1]);
+const V3v = to3(V), W3 = to3(W), U3 = to3(U);
+const O: V3 = [0, 0, 0];
+
+/** The opening, under 10 s, no words: v and w, the plane they reach, then u lands in that same plane. */
+export async function coldOpen(g: Game): Promise<void> {
+  await fadeBlack(g, true, 10);
+  g.stage.clearWorld();
+  g.mood('explore');
+  const host = worldHost(g);
+  const sp = new Space(host);
+  await sp.enter([V3v, W3, U3], { rect: 'full', ...VIEW, sway: false, zoom: 0.75 });
+  void fadeBlack(g, false, 900);
+  void titleCard(g, 'Chapter 3', TITLE, 1800);
+  await wait(2300);
+  if (!host.alive()) return;
+  await sp.arrow('v', 'g').label('$\\mathbf v$').grow(V3v, { from: O, ms: 700 });
+  await sp.arrow('w', 'b').label('$\\mathbf w$').grow(W3, { from: O, ms: 700 });
+  if (!host.alive()) return;
+  // the plane they reach: every a v + b w
+  const plane = sp.plane(V3v, W3, { n: 2, opacity: 0.26 });
+  await animate(900, (k) => plane.setOpacity(k), ease.out);
+  await wait(250);
+  if (!host.alive()) return;
+  await sp.arrow('u', 'w').label('$\\mathbf u$').grow(U3, { from: O, ms: 900 });
+  sfx.snap();
+  // turn so the plane tilts away: u stays flat in it
+  await sp.turn(-60, 30, 2600);
+  sp.sway(true);
+  await wait(600);
+}
+
+/** Behind the name card: v, then 2w from its tip, then −u back to the origin. */
+export async function triangleVisual(g: Game): Promise<void> {
+  g.stage.clearWorld();
+  // on a phone the card fills the screen: an arrow tip peeking above it reads as a glitch, so draw nothing
+  if (g.stage.size.x < 760) return;
+  const host = worldHost(g);
+  const sp = new Space(host);
+  await sp.enter([V3v, W3, U3], { rect: 'card', ...VIEW });
+  void (async () => {
+    await wait(300);
+    if (!host.alive()) return;
+    await sp.arrow('v', 'g').label('$\\mathbf v$').grow(V3v, { from: O, ms: 600 });
+    if (!host.alive()) return;
+    await sp.arrow('2w', 'b').label('$2\\mathbf w$').grow(mul3(2, W3), { from: V3v, ms: 700 });
+    if (!host.alive()) return;
+    await sp.arrow('-u', 'w').label('$-\\mathbf u$').grow(mul3(-1, U3), { from: U3, ms: 800 });
+    sfx.snap();
+  })();
+}
+
+// ------------------------------------------------------------------ the end of Act I (story; every line can be skipped)
 
 /** Drive the camera each frame from a function of time; returns a stop function. */
 function cam(g: Game, f: (t: number) => { pos: V3; look: V3 }): () => void {
@@ -34,50 +82,6 @@ function cam(g: Game, f: (t: number) => { pos: V3; look: V3 }): () => void {
 function tie(o: Object3D, stop: () => void): void {
   const prev = o.userData.dispose as (() => void) | undefined;
   o.userData.dispose = () => { stop(); prev?.(); };
-}
-
-/** Cold open: fire all three thrusters, spare included, and stay on the plane. */
-export async function coldOpen(g: Game): Promise<void> {
-  await fadeBlack(g, true, 10);
-  g.stage.clearWorld();
-  g.mood('explore');
-  const glow = new ReachGlow(g.stage, { cell: 0.13 });
-  glow.setArrows([T0, T1]);
-  glow.fill([[-2.5, 3.5], [-2.5, 3.5]], { spread: 0.1 });
-  const signal = new Beacon(g.stage, to3(SIGNAL), { color: '#59e1ff', label: 'signal' });
-  const ship = makeLantern(g.stage, 0.24);
-  ship.face([1, 1, 2]);
-  const spare = own(new Arrow([0, 0, 0], to3(SPARE_BAD), { color: C.u, width: 0.045, label: 'spare' }));
-  g.stage.world.add(glow.object, signal.object, ship.object, spare.object);
-  const stop = cam(g, (t) => {
-    const a = -1.05 + t * 0.025, e = 0.32 - Math.min(0.2, t * 0.012), d = 16;
-    return { pos: [1 + d * Math.cos(e) * Math.cos(a), 1.5 + d * Math.cos(e) * Math.sin(a), 2 + d * Math.sin(e)], look: [1, 1.5, 2] };
-  });
-  tie(glow.mesh, stop);
-  await fadeBlack(g, false, 1200);
-  await letterbox(g, true, 500);
-  void titleCard(g, 'Chapter 3', 'Is one of these thrusters wasted?', 3600);
-  await g.say(S.open.slice(0, 3));
-  // fire all three: 1 of each; the trail stays on the plane
-  await ship.ready;
-  let at: V3 = [0, 0, 0];
-  for (const leg of [T0, T1, to3(SPARE_BAD)]) {
-    const from = at, to: V3 = [at[0] + leg[0], at[1] + leg[1], at[2] + leg[2]];
-    ship.face(leg);
-    ship.setThrust(1);
-    sfx.thrust(0.6);
-    await animate(1100, (k) => ship.object.position.set(from[0] + leg[0] * k, from[1] + leg[1] * k, from[2] + leg[2] * k), ease.inOut);
-    ship.setThrust(0.2);
-    at = to;
-  }
-  await g.say(S.open.slice(3));
-  await letterbox(g, false, 500);
-}
-
-/** The holotable on the bridge. */
-export async function holotable(g: Game): Promise<void> {
-  g.stage.clearWorld();
-  await bridgeShot(g);
 }
 
 /** Wrap a model so a shear matrix applies to it: root (position) → shear → model. */
@@ -102,25 +106,24 @@ export async function reveal(g: Game): Promise<void> {
   g.stage.clearWorld();
   music.stop(1.2);
   // the old plane below, fading as the ship climbs
-  const glow = new ReachGlow(g.stage, { cell: 0.3, size: 0.8 });
-  glow.setArrows([T0, T1]);
-  glow.fill([[-6, 6], [-6, 6]], { spread: 0.1 });
+  const plane = new PlanePatch(g.stage, O, [-1, -1, 1], { color: '#7d8aa5', size: 14, opacity: 0.1 });
+  plane.setSpan(O, V3v, W3);
+  plane.object.userData.dispose = () => plane.dispose();
   const ship = makeLantern(g.stage, 0.5);
   ship.face([0.6, 0.2, 1]);
   ship.setThrust(1);
-  g.stage.world.add(glow.object, ship.object);
+  g.stage.world.add(plane.object, ship.object);
   const anchor = await makeAnchor(g.stage, 5);
   anchor.position.set(-60, -70, -20);
   // the ark, sheared, far ahead and above
   const m = await loadModel('meridian');
-  let ark: ReturnType<typeof sheared> | null = null;
   if (m) {
     m.rotation.x = Math.PI / 2;
     const box = new Box3().setFromObject(m);
     const size = box.getSize(new Vector3()), centre = box.getCenter(new Vector3());
     m.position.sub(centre);
     const s = 70 / Math.max(size.x, size.y, size.z);
-    ark = sheared(m, 0.32);
+    const ark = sheared(m, 0.32);
     ark.root.scale.setScalar(s);
     ark.root.position.set(40, 70, 46);
     ark.root.rotation.z = -0.5;
@@ -136,27 +139,23 @@ export async function reveal(g: Game): Promise<void> {
     const pos = sp.clone().add(new Vector3(-5.5, -7.5, 1.2).lerp(new Vector3(-7, -10, 2.4), ease.inOut(k)));
     return { pos: [pos.x, pos.y, pos.z], look: [look.x, look.y, look.z] };
   });
-  tie(glow.mesh, stop);
-  glow.setGain(0.2);
-  const climb = g.stage.tick((dt) => { shipZ += dt * 1.6; ship.object.position.copy(shipPos()); glow.setGain(Math.max(0, 0.2 - shipZ * 0.02)); });
-  tie(ship.object, climb);
-  await fadeBlack(g, false, 1400);
-  await letterbox(g, true, 600);
+  tie(ship.object, stop);
+  const climb = g.stage.tick((dt) => { shipZ += dt * 1.6; ship.object.position.copy(shipPos()); plane.setOpacity(Math.max(0, 1 - shipZ * 0.1)); });
+  tie(plane.object, climb);
+  await fadeBlack(g, false, 1200);
+  await letterbox(g, true, 500);
   sfx.whoosh(2);
-  await wait(2600);
+  await wait(1000);
   g.mood('void');
-  void stamp(g, 'Off the plane · approach to the colony ark *Meridian*', 4200);
+  void stamp(g, 'Off the plane · approach to the colony ark *Meridian*', 3600);
   // swing the view past the ship to the ark (awaited, so the lines start on the ark)
-  await animate(5500, (x) => { k = x; }, ease.linear);
+  await animate(3500, (x) => { k = x; }, ease.linear);
   sfx.discover();
   await g.say(S.reveal, {
     onLine: (_l, i) => {
-      if (i === 3) {
-        answer('reach-signal', 'A third thruster mounted off the plane adds a new direction. Three thrusters that point in three independent directions reach every point, so the *Lantern* lifted off the plane to the ark.', 'c03');
-        g.toast('Answered: how do we get to the signal?', 'Case board');
-      }
+      if (i === 3) answer('reach-signal', 'A third vector off the plane adds a new direction. Three independent vectors reach every point, so the *Lantern* lifted off the plane to the ark.', 'c03');
     },
   });
-  await wait(800);
+  await wait(600);
   await letterbox(g, false, 600);
 }
