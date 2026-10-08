@@ -1,6 +1,6 @@
-// Chapter 1 Briefing (GDD §6.3 Ch 1): Say it, two Doubts (one false, one true), the Law, Ilse's page.
-import { Vector3 } from 'three';
-import type { CompareDef, DoubtDef, LawDef, SayItDef, V3 } from '../../../game/types';
+// Chapter 1's two old Doubts, kept only for the prototype chapter (c90-proto), which imports them.
+// Chapter 1 itself no longer plays them.
+import type { DoubtDef, V3 } from '../../../game/types';
 import { Arrow } from '../../../gfx/arrow';
 import { Dot } from '../../../gfx/markers';
 import { Parallelogram, InfLine } from '../../../gfx/shapes';
@@ -10,23 +10,10 @@ import { nice } from '../../../math/frac';
 import { animate, ease } from '../../../core/tween';
 import { sfx } from '../../../audio/sfx';
 import { VectorHandle } from '../../../kit/handle';
-import { ordersDiffer, negFlipHolds, lawCore, type OrderCase } from './logic';
+import { ordersDiffer, negFlipHolds } from './logic';
 import { rint } from '../../../game/lawcheck';
 
 const fmt = (v: number[]) => `(${nice(v[0])}, ${nice(v[1])})`;
-
-export const sayit: SayItDef = {
-  id: 'c01', who: 'bram',
-  ask: 'Why is the arrow from P to Q equal to Q minus P?',
-  frames: {
-    see: 'The arrow starts at ___ and its tip is at ___.',
-    means: 'To get from P to Q, each part of the move is ___ minus ___.',
-    called: 'This arrow is called a ___.',
-    cue: 'When you see "from here to there", think ___.',
-  },
-  wordBank: ['tail', 'tip', 'start', 'end', 'across', 'up', 'minus', 'vector', 'end minus start'],
-};
-
 
 export const doubtOrder: DoubtDef = {
   id: 'c01-d-order', who: 'bram', isTrue: false,
@@ -105,49 +92,4 @@ export const doubtFlip: DoubtDef = {
       async showMe() { k = -2; slider.set(k, false); await v.moveTo([2, 1, 0], 400, [0, 0, 0]); upd(); },
     };
   },
-};
-
-export const law: LawDef<OrderCase> = {
-  ...lawCore,
-  frame: ['Doing $\\cg{\\mathbf v}$ then $\\cr{\\mathbf w}$ lands ', { slot: 'where' }, ' doing $\\cr{\\mathbf w}$ then $\\cg{\\mathbf v}$, ', { slot: 'when' }, '.'],
-  slots: {
-    where: { options: [{ id: 'same', text: 'at the same point as' }, { id: 'diff', text: 'at a different point from' }] },
-    when: { options: [
-      { id: 'always', text: 'always' },
-      { id: 'parallel', text: 'exactly when the arrows are parallel' },
-      { id: 'positive', text: 'exactly when every part is positive' },
-      { id: 'short', text: 'exactly when both arrows are shorter than 3' },
-    ] },
-  },
-  draw(g, c) {
-    const v = c.v, w = c.w;
-    const end: V3 = [v[0] + w[0], v[1] + w[1], 0];
-    g.stage.world.add(
-      new Arrow([0, 0, 0], [v[0], v[1], 0], { color: C.v }).object,
-      new Arrow([v[0], v[1], 0], end, { color: C.w }).object,
-      new Arrow([0, 0, 0], [w[0], w[1], 0], { color: C.w, opacity: 0.55, width: 0.035 }).object,
-      new Arrow([w[0], w[1], 0], end, { color: C.v, opacity: 0.55, width: 0.035 }).object,
-      new Dot(end, { color: C.result, size: 0.12 }).object,
-    );
-    void new Vector3();
-  },
-  reason: {
-    ask: 'Your Law survived. **Why** does the order never matter?',
-    options: [
-      { id: 'a', text: 'Each direction adds on its own: across, $v_1 + w_1 = w_1 + v_1$; up, $v_2 + w_2 = w_2 + v_2$.', right: true, why: 'Yes. Two numbers give the same sum in either order, and vectors add part by part. That is the whole reason.' },
-      { id: 'b', text: 'The ship flies straight to the end point either way.', right: false, why: 'The two routes are different paths: one goes along v first, the other along w first. They meet at the end because the totals match.' },
-      { id: 'c', text: 'The two routes are the same length.', right: false, why: 'They are the same length, but that would not put them at the same point: many different points are the same distance away.' },
-    ],
-  },
-};
-
-export const compare: CompareDef = {
-  id: 'c01',
-  page: 'An arrow from **P** to **Q** says how far to move along each axis to get from P to Q.\n\nIts parts are differences, axis by axis: across $q_1 - p_1$, up $q_2 - p_2$. So the arrow is **Q − P**: end minus start.\n\nThe same arrow drawn from any other start is the same move. Doing one move after another adds the parts, so the order does not change where you end.',
-  formula: '\\overrightarrow{PQ} = Q - P = \\begin{bmatrix} q_1 - p_1 \\\\ q_2 - p_2 \\end{bmatrix}',
-  keyIdeas: [
-    'Did you say the arrow is a move, not a place?',
-    'Did you say each part is end minus start, one axis at a time?',
-    'Did you say the same arrow from any start is the same move?',
-  ],
 };
