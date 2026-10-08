@@ -251,10 +251,14 @@ export class App implements Game {
       const cards: { el: HTMLElement; col: HTMLElement; words: string[]; terms: string[]; covers: HTMLElement }[] = [];
       const cols = ACTS.filter((a) => CHAPTERS.some((c) => c.act === a.num)).map((a) => {
         const chs = CHAPTERS.filter((c) => c.act === a.num);
-        const col = h('div', { class: 'map-act' },
-          h('div', { class: 'kicker' }, ROMAN[a.num] ? `Act ${ROMAN[a.num]}` : '\u00a0'),
-          h('h3', { class: 'map-act-title' }, a.title),
-          h('div', { class: 'c-muted map-act-sub' }, a.subtitle));
+        // one act per row: its name on one line, its chapters wrapping underneath (no sideways scrolling)
+        const list = h('div', { class: 'map-act-cards' });
+        const col = h('section', { class: 'map-act' },
+          h('div', { class: 'map-act-head' },
+            ROMAN[a.num] ? h('span', { class: 'kicker' }, `Act ${ROMAN[a.num]}`) : null,
+            h('h3', { class: 'map-act-title' }, a.title),
+            h('span', { class: 'c-muted map-act-sub' }, a.subtitle)),
+          list);
         for (const c of chs) {
           const cs = chapterSave(c.id);
           const puzzles = c.beats.filter((b) => b.kind === 'puzzle').length;
@@ -277,7 +281,7 @@ export class App implements Game {
                 return bb;
               }))));
           card.querySelector('.map-ch-main')!.addEventListener('click', () => { picked = { ch: c, beat: 0 }; sfx.click(); close(); });
-          col.append(card);
+          list.append(card);
           // named terms the card does not already show in its topic ("dot product" under "Dot product" says nothing new)
           const topic = chapterTopic(c).toLowerCase();
           const terms = c.beats.flatMap((b) => (b.kind === 'name' && !topic.includes(b.entry.term.toLowerCase()) ? [b.entry.term] : []));
@@ -299,7 +303,6 @@ export class App implements Game {
           c.covers.textContent = named.length ? `Covers: ${named.join(', ')}` : '';
         }
         for (const col of cols) col.hidden = !cards.some((c) => c.col === col && !c.el.hidden);
-        grid.classList.toggle('searching', q.length > 0); // results wrap onto rows: nothing hides off to the right
         none.hidden = cards.some((c) => !c.el.hidden);
       });
       return [
