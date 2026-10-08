@@ -17,8 +17,8 @@ const IN_SHORT = 'How much does one arrow point along another? **Multiply matchi
 const NAME_DOT: Beat = {
   kind: 'name', id: 'name-dot', entry: {
     id: 'dot-product', term: 'dot product', question: 'How much does one arrow point along another?', nodes: ['N05'], visual: shot(1),
-    saw: 'The dish reading of $(3, 1)$ against $(2, 4)$ was $3 \\times 2 + 1 \\times 4 = 10$: each grid arrow\'s reading, scaled and added. The direction $(2, -1)$ read exactly **0**, at a right angle to the signal.',
-    means: 'Multiply matching parts and add. The number is the length of one arrow\'s shadow on the other\'s line, times the other\'s length. **Big and positive**: they point the same way. **Zero**: a right angle. **Negative**: they point apart.',
+    saw: 'You found $3 \\times 2 + 1 \\times 4 = 10$. You also found a nonzero vector whose result was $0$, perpendicular to the other vector.',
+    means: 'Multiply matching coordinates and add. For nonzero vectors: **positive** means an angle below 90°, **zero** means 90°, and **negative** means above 90°. The size also depends on both lengths.',
     name: 'This number is the **dot product** $\\mathbf v\\cdot\\mathbf w$. It is one number, not an arrow. Two arrows whose dot product is 0 are **orthogonal**: at a right angle, or one of them is the zero vector.',
     formula: '\\cg{\\mathbf v}\\cdot\\cr{\\mathbf w} = \\cg{v_1}\\cr{w_1} + \\cg{v_2}\\cr{w_2} + \\cg{v_3}\\cr{w_3} \\qquad \\begin{bmatrix}3\\\\1\\end{bmatrix}\\cdot\\begin{bmatrix}2\\\\4\\end{bmatrix} = 6 + 4 = 10',
     why: 'The reading of $a(1, 0) + b(0, 1)$ is $a$ times the reading of $(1, 0)$ plus $b$ times the reading of $(0, 1)$, because shadows add along a line. Those two readings are the signal\'s own parts.',
@@ -30,7 +30,7 @@ const NAME_DOT: Beat = {
 const NAME_ANGLE: Beat = {
   kind: 'name', id: 'name-angle', entry: {
     id: 'angle-between', term: 'angle between vectors', question: 'What angle do two arrows make?', nodes: ['N05'], visual: shot(2),
-    saw: 'For every pair you dragged, $v_1w_1 + v_2w_2$ and $\\|\\mathbf v\\|\\|\\mathbf w\\|\\cos\\theta$ showed the same number.',
+    saw: 'For each pair you calculated, $v_1w_1 + v_2w_2$ and $\\|\\mathbf v\\|\\|\\mathbf w\\|\\cos\\theta$ showed the same number.',
     means: 'Expanding $\\|\\mathbf v - \\mathbf w\\|^2$ and the law of cosines describe the same side of one triangle, so their last terms match. The dot product is both lengths times the cosine of the angle between them.',
     name: 'The **angle between vectors** $\\mathbf v$ and $\\mathbf w$ is the $\\theta$ from 0° to 180° with $\\cos\\theta = \\dfrac{\\mathbf v\\cdot\\mathbf w}{\\|\\mathbf v\\|\\|\\mathbf w\\|}$.',
     formula: '\\cg{\\mathbf v}\\cdot\\cr{\\mathbf w} = \\|\\cg{\\mathbf v}\\|\\,\\|\\cr{\\mathbf w}\\|\\cos\\theta \\qquad \\cos\\theta = \\frac{5}{\\sqrt{10}\\,\\sqrt{5}} = \\frac{1}{\\sqrt 2},\\quad \\theta = 45^\\circ',

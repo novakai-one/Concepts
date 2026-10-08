@@ -103,6 +103,8 @@ export interface PuzzleRuntime {
 }
 
 export interface PuzzleDef {
+  /** Opt this puzzle into the calm layout without changing the rest of its chapter. */
+  calm?: boolean;
   id: string;
   /** Plain question heading, e.g. "Which points can these two thrusters reach?" */
   title: string;
