@@ -1,0 +1,10 @@
+/* Chapter 1 only (c01- prefix): all chapter CSS is global. */
+/* the second vector of a sum, in the dock's equations: blue like its arrow */
+.c01-b { color: var(--u); }
+/* the box holds the second vector of a sum: blue like the arrow that follows it */
+.tj-row.c01-eq .tj-col .cell.tj-cell { color: var(--u); }
+/* drill boxes take the colour of the vector they stand for */
+.tj-row.c01-box-b .tj-col .cell.tj-cell, .tj-row.c01-box-b .cell.tj-cell { color: var(--u); }
+.tj-row.c01-box-g .tj-col .cell.tj-cell, .tj-row.c01-box-g .cell.tj-cell { color: var(--v); }
+/* phones: the "Solved" card sits over the bottom of the dock; lift the dock so the last message stays readable */
+@media (max-width: 760px) { body:has(.win-card) .dock.c01-dock { bottom: 128px; } }

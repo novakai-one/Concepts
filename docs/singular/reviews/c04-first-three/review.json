@@ -1,0 +1,57 @@
+{
+  "date": "2026-10-09",
+  "scope": "Chapter 4, first three puzzles only",
+  "base": "56d9b1c",
+  "learner_requirements": [
+    "Commander with typing only",
+    "Achievable initial examples, then moderately difficult independent calculation",
+    "Ten varied practice rounds per idea",
+    "Movement must explain a mathematical operation or submitted answer"
+  ],
+  "implementation": {
+    "p1": "Free typed-vector experiments animate coordinate contributions and their perpendicular projections; ten rounds then require calculated products, signed arithmetic, fractions and unknown coordinates.",
+    "p2": "Ten rounds require missing coordinates or a full nonzero perpendicular vector. Later cases add a second linear condition, requiring a system of equations. Valid alternative solutions are accepted.",
+    "p3": "A six-step derivation compares coordinate expansion with the cosine rule for the same triangle side. Ten fresh vector pairs then require dot products, cosines and angles, with intermediate help fading.",
+    "motion": "Green v and blue w remain tied to the givens. Projection motion uses true geometric lengths; coordinate products are shown as numbers, never presented as those lengths. Yellow v-w joins endpoints in the angle lesson. A submitted wrong angle produces a comparison ray.",
+    "layout": "One active equation panel. The kit frames the geometry in the remaining area, with scoped calm styling for these three puzzles only.",
+    "notation": "Stacked vectors, exact small repeating fractions and approximation signs for rounded cosines and angles."
+  },
+  "browser_verification": {
+    "mode": "Commander verified from the active puzzle context; no dragging or sliders used",
+    "desktop": "1440x900: both opening experiments, all 30 practice rounds and the six-step derivation completed through visible typed controls; all three win conditions observed.",
+    "wrong_attempts": [
+      "Incorrect arithmetic stayed in the round",
+      "Zero vector rejected for perpendicular task",
+      "A perpendicular vector failing the added sum condition was rejected",
+      "Wrong squared side and wrong angle rejected"
+    ],
+    "help": "Show me demonstrated the current angle round, recorded assisted, and did not win the entire puzzle.",
+    "phone": "390x844, mobile browser context with touch enabled: free experiments, arithmetic and perpendicular first-round submissions, six-step derivation and sign key exercised. Settled screenshots inspected; no document or dock horizontal overflow.",
+    "regression": "Later Chapter 4 puzzle retains ordinary styling; Chapter 18 retains calm styling. Neither was rebuilt."
+  },
+  "checks": {
+    "build": "Passed",
+    "existing_unit_tests": "455 passed; no new test suite"
+  },
+  "whole_output_repairs": [
+    "Replaced supplied-slider success with calculated commitments",
+    "Replaced old fixed-angle question with current-vector questions",
+    "Added the missing algebraic link between squared side, dot product and cosine rule",
+    "Kept angle diagrams consistent across dot and cosine stages",
+    "Kept rounded values approximate and repeating fractions exact",
+    "Corrected helper entry rounding so it demonstrates a valid cosine",
+    "Guarded disposed scenes against late round completion",
+    "Waited for mobile re-framing before accepting screenshots"
+  ],
+  "evidence": [
+    "vector-experiment.png",
+    "perpendicular-phone.png",
+    "cosine-rule-phone.png"
+  ],
+  "limits": [
+    "Physical-phone keyboard behaviour was not tested",
+    "Only initial phone rounds and full mobile derivation were played, rather than all 30 phone rounds",
+    "Screenshots and passing checks do not establish learner understanding or acceptance",
+    "Later Chapter 4 puzzles and the rest of Act II are outside this change"
+  ]
+}
