@@ -1,5 +1,5 @@
-// Chapter 18 puzzles 5–7: a 3 × 3 by hand (p5 [H] [X8]), the lines of Vell's matrix V (p6), and what
-// row reducing first does to the eigenvalues (p7 [S]). Plain maths: docs/singular/ch18-plain-style.md.
+// Chapter 18 puzzles 5 and 6: a 3 × 3 by hand (p5 [H] [X8]) and the lines of Vell's matrix V (p6).
+// p7 (row reducing first) is in find.ts. Plain maths: docs/singular/ch18-plain-style.md.
 import type { PuzzleDef, V3 } from '../../../game/types';
 import { Arrow } from '../../../gfx/arrow';
 import { InfLine, Lattice3D } from '../../../gfx/shapes';
@@ -9,14 +9,13 @@ import { h, button, inline } from '../../../ui/ui';
 import { C } from '../../../core/theme';
 import { animate, ease, wait } from '../../../core/tween';
 import { sfx } from '../../../audio/sfx';
-import { matVec, mlerp, norm, normalize, type Mat, type Vec } from '../../../math/la';
-import { LineHunt, niceDir, ptag, v3, sg } from './parts';
+import { matVec, norm, normalize, type Mat, type Vec } from '../../../math/la';
+import { niceDir, ptag, v3, sg } from './parts';
 import {
-  P3_A, P5_A, P5_BLOCK_C, P5_TRI, P5_TRI_VALUES, P5_VALUES, P5_VECS, P6_CANDIDATES, P6_LINES, P6_V, P7_U, eigenLines, fmtN,
+  P5_A, P5_BLOCK_C, P5_TRI, P5_TRI_VALUES, P5_VALUES, P5_VECS, P6_CANDIDATES, P6_LINES, P6_V, eigenLines, fmtN,
   lineAngleDeg, p6Won, texM, trace, type Lock,
 } from './logic';
 import { S } from './script';
-import { hideLandingLine } from './puzzles';
 import { tcol, tmul } from './traj-text';
 
 const det3 = (M: Mat) => M[0][0] * (M[1][1] * M[2][2] - M[1][2] * M[2][1]) - M[0][1] * (M[1][0] * M[2][2] - M[1][2] * M[2][0]) + M[0][2] * (M[1][0] * M[2][1] - M[1][1] * M[2][0]);
@@ -312,83 +311,6 @@ export const p6: PuzzleDef = {
       },
       async solve() { for (const [dir] of P6_LINES) await test(dir, true); fill(); },
       async wrong() { await test([1, 0, 0], true); await test([1, 1, 0], true); },
-    };
-  },
-};
-
-// ------------------------------------------------------------------ p7 [S] · row reduce first?
-
-export const p7: PuzzleDef = {
-  id: 'c18-p7',
-  title: 'Does row reducing keep the eigenvalues?',
-  goal: `$A = ${texM(P3_A)}$ has $\\lambda = 5$ and $2$. Row reduce it to $U$. Find the lines $U$ keeps. Are they $A$’s lines?`,
-  subgoals: ['Row reduce: $R_2 \\to R_2 - \\tfrac12 R_1$', 'Find both lines of $U$'],
-  hints: [
-    'Press the row operation. It clears the $2$ under the first pivot.',
-    'Then drag green round. $U$ is triangular, so its eigenvalues are its diagonal: $4$ and $2.5$.',
-    `Its lines go through $${tcol([1, 0])}$ and $${tcol([2, -3])}$, not $A$’s $${tcol([1, 1])}$ and $${tcol([1, -2])}$.`,
-  ],
-  par: 6,
-  onWin: S.p7Win,
-  setup(p) {
-    void p.g.stage.view2D({ center: [0.6, 0], height: 9.4, ms: 0 });
-    const grid = p.grid({ main: 0.4, base: 0.1, axis: 0.6 });
-    hideLandingLine(grid);
-    grid.set(P3_A);
-    // A's own lines, faint and dashed, for comparison
-    for (const l of eigenLines(P3_A)) {
-      const L = new InfLine(p.g.stage, [0, 0, 0.002], v3(l.dir), { color: C.violet, width: 1.6, opacity: 0.35, dashed: true });
-      p.add(L.object); p.onDispose(() => L.dispose());
-      // on the upper half of each line, between the goal card and the readout, clear of where U v lands
-      const s = l.dir[1] >= 0 ? 2.4 : -2.4;
-      ptag(p, `$A$: $\\lambda = ${fmtN(l.value)}$`, v3(l.dir.map((t) => t * s)), 'vi dim', [0, -14]);
-    }
-    const r = p.readout('');
-    r.row('a', 'eigenvalues of $A$', '5 and 2', C.violet);
-    r.row('u', 'eigenvalues of $U$', '?', C.result);
-    const num = (t: number) => (Math.abs(t - Math.round(t)) < 1e-9 ? String(Math.round(t)) : t.toFixed(2));
-    let hunt: LineHunt | null = null;
-    let reduced = false, won = false;
-    const box = h('div', { style: 'display:flex;flex-direction:column;gap:8px' });
-    const paint = () => {
-      if (!hunt) return;
-      const xv = hunt.x, yv = hunt.image;
-      r.eq(`U\\mathbf v = ${texM(P7_U)}\\begin{bmatrix} ${num(xv[0])} \\\\ ${num(xv[1])} \\end{bmatrix} = \\begin{bmatrix} ${num(yv[0])} \\\\ ${num(yv[1])} \\end{bmatrix}`);
-    };
-    const reduce = async (fast = false) => {
-      if (reduced) return;
-      reduced = true;
-      p.move();
-      sfx.whoosh(1);
-      await animate(fast ? 1 : 1200, (k) => grid.set(mlerp(P3_A, P7_U, k)), ease.inOut);
-      grid.set(P7_U);
-      sg(p, 0);
-      r.row('m', '$U$', `$${texM(P7_U)}$`);
-      hunt = new LineHunt(p, { M: P7_U, radius: 1.2, start: Math.PI / 3, autoLock: true, typedStretch: false, tolDeg: 3, mount: box, plain: true, name: 'U', labels: { x: '$\\mathbf v$', mx: '$U\\mathbf v$' }, onChange: () => check() });
-      btn.disabled = true;
-      hunt.say('The grid now shows $U$. Drag green round.');
-      paint();
-    };
-    const check = () => {
-      if (!hunt) return;
-      paint();
-      if (hunt.rows.length) r.row('u', 'eigenvalues of $U$', hunt.rows.map((x) => fmtN(x.line.value)).join(' and '), C.result);
-      if (hunt.done && !won) { won = true; sg(p, 1); sfx.success(); hunt.say('Different lines, different eigenvalues. Row operations change the matrix, so they change its eigenvalues.', 'good'); p.win(); }
-    };
-    const btn = button(inline('Row reduce: $R_2 \\to R_2 - \\tfrac12 R_1$'), () => void reduce(), { cls: 'primary small', html: true });
-    p.dock().append(h('div', { class: 'a7-row' }, btn), box);
-    return {
-      async showMe() {
-        await reduce();
-        await wait(500);
-        // first, A's line through (1, 1) under U: yellow is turned off it
-        await hunt!.sweep.turnTo(Math.PI / 4, 900);
-        hunt!.say(`$U${tcol([1, 1])} = ${tcol([5, 2.5])}$. Not a number times $${tcol([1, 1])}$: $U$ turns it.`, 'bad');
-        await wait(2200);
-        await hunt!.showMe();
-        if (!p.g.headless) hunt!.say(`$U$ is triangular, so its eigenvalues are its diagonal: $4$ and $2.5$. $A$’s are $5$ and $2$.`, 'good');
-      },
-      async solve() { await reduce(true); await hunt!.showMe(10); },
     };
   },
 };

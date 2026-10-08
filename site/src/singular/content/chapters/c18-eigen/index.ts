@@ -7,10 +7,11 @@
 // player's power_iteration.
 import type { Beat, ChapterDef } from '../../../game/types';
 import { bridgeShot } from '../../common/shots';
-import { p2, p3, p4 } from './puzzles';
+import { p3 } from './puzzles';
+import { p2, p4, p7 } from './find';
 import { m1, p1, solo } from './traj-puzzles';
 import { drill } from './drill';
-import { p5, p6, p7 } from './puzzles2';
+import { p5, p6 } from './puzzles2';
 import { compare, doubtEvery, doubtTrace, doubtZero, law, procedure, sayit } from './briefing';
 import { buildEig2, buildPower } from './build';
 import { coda, coldOpen, fieldShot, finder, whyVisual } from './scenes';
@@ -52,9 +53,9 @@ const NAME_CHAR: Beat = {
 const NAME_COMPLEX: Beat = {
   kind: 'name', id: 'name-complex', entry: {
     id: 'complex-eigenvalues', term: 'complex eigenvalues', question: 'What are the eigenvalues of a rotation?', nodes: ['N20'],
-    saw: '$T$ turned every vector, and $\\det(T - \\lambda I) = \\lambda^2 + 1$ was never 0. Applying $T$ four times brought every point home: $T^4 = I$.',
-    means: 'A rotation (by any angle except 0° or 180°) keeps no real line. Its eigenvalues are not real numbers.',
-    name: 'Roots like $\\pm i$, or $p \\pm qi$, are **complex eigenvalues**. Here $i^2 = -1$.',
+    saw: '$T$ turned every vector, so it has no eigenvectors. Applied four times, it brought the L back: $T^4 = I$.',
+    means: '$\\det(T - \\lambda I) = \\lambda^2 + 1$ is never $0$ for a real number $\\lambda$. A rotation (by any angle except 0° or 180°) keeps no line.',
+    name: 'The roots of $\\lambda^2 + 1 = 0$ are $\\lambda = \\pm i$, where $i^2 = -1$. Roots like these are **complex eigenvalues**.',
     formula: '\\lambda^2 + 1 = 0 \\;\\Rightarrow\\; \\lambda = \\pm i, \\qquad i^4 = 1 \\;\\Rightarrow\\; T^4 = I',
     use: 'Complex eigenvalues mean rotation. They show up wherever something oscillates.',
   },

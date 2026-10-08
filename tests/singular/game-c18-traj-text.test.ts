@@ -42,7 +42,7 @@ function walk(x: unknown, at: string, out: { at: string; s: string }[]): void {
 
 function strings(): { at: string; s: string }[] {
   const out: { at: string; s: string }[] = [];
-  for (const k of ['M1T', 'SOLOT', 'DRILL', 'LOG_NAMES', 'OUTCOME_NAMES', 'ZERO', 'UNREAD', 'UNREAD_M'] as const) walk(X[k], k, out);
+  for (const k of ['M1T', 'SOLOT', 'DRILL', 'SHEAR', 'TURN', 'TURN_L', 'ROWRED', 'LOG_NAMES', 'OUTCOME_NAMES', 'ZERO', 'UNREAD', 'UNREAD_M'] as const) walk(X[k], k, out);
   // the wrong-number message takes a verdict, not a sample: it is checked through wrongMult below
   const { wrongMultiplier: _w, ...game1 } = G.GAME1;
   walk(game1, 'GAME1', out);
