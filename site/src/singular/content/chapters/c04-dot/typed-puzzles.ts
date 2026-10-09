@@ -21,7 +21,7 @@ import { sfx } from '../../../audio/sfx';
 import { wait } from '../../../core/tween';
 import { S, save } from '../../../core/save';
 import {
-  PRODUCT_CASES,
+  PRACTICE,
   PERP_CASES,
   ANGLE_CASES,
   difference,
@@ -30,12 +30,13 @@ import {
   degreesOf,
   meetsPerp,
   type ProductCase,
+  type RuleCase,
   type PerpCase,
   type AngleCase,
 } from './typed-data';
 import { DotPicture } from './typed-picture';
 const pair = (v: Vec, w: Vec) => `$\\mathbf v=${tv(v)}\\quad\\mathbf w=${tv(w)}$`;
-const calc = (v: Vec, w: Vec) => `${tnb(v[0])}\\times${tnb(w[0])}+${tnb(v[1])}\\times${tnb(w[1])}`;
+const calc = (v: Vec, w: Vec) => v.map((x, i) => `${tnb(x)}\\times${tnb(w[i])}`).join('+');
 const blankSym = (v: Vec, i: 0 | 1) =>
   `\\begin{bmatrix}${i === 0 ? 'v_1' : tnp(v[0])}\\\\${i === 1 ? 'v_2' : tnp(v[1])}\\end{bmatrix}`;
 const named = (v: Vec, w: Vec) => `${tv(v)}\\cdot${tv(w)}`;
@@ -43,7 +44,7 @@ const roundedRelation = (x: number, digits: number) =>
   Math.abs(x - Number(x.toFixed(digits))) < 1e-12 ? '=' : '\\approx';
 const exact = (a: number, b: number, tol = 1e-8) => Math.abs(a - b) <= tol;
 const RULE = '$\\mathbf v\\cdot\\mathbf w=v_1w_1+v_2w_2$';
-const HELP = 'Multiply matching numbers, then add: $\\mathbf v\\cdot\\mathbf w=v_1w_1+v_2w_2$.\n\nDecimals and fractions work.';
+const HELP = '$\\mathbf v\\cdot\\mathbf w$ = (length of $\\mathbf v$\'s shadow on $\\mathbf w$\'s line) $\\times\\ \\|\\mathbf w\\|$ $=v_1w_1+v_2w_2$.\n\nDecimals and fractions work.';
 const ANGLE_HELP =
   'The yellow side joins the vector endpoints: $\\mathbf v-\\mathbf w$. Both formulas calculate the squared length of that side.\n\nUse inverse cosine in degree mode. Give cosines to four decimal places and angles to the nearest $0.1^\\circ$.';
 function scene(p: PuzzleCtx, angle = false): { view: PlaneView; d: PlainDock; picture: DotPicture } {
@@ -94,12 +95,13 @@ function productRound(c: ProductCase, i: number, picture: DotPicture): Round {
           const v = c.v.slice();
           if (unknown !== undefined) v[unknown] = x;
           try {
-            await picture.reveal(v, c.w);
+            await picture.shadow(v, c.w);
             if (!rc.live()) return;
             const actual = dot(v, c.w),
               right = exact(x, answer);
+            const sign = Math.abs(actual) < 1e-9 ? ' No shadow: a right angle.' : actual < 0 ? ' The shadow points backwards.' : '';
             d.msg(
-              `$${calc(v, c.w)}=${tnp(actual)}$.${right ? '' : unknown === undefined ? ` Not $${tnp(x)}$.` : ` Not $${tnp(result)}$.`}`,
+              `$${calc(v, c.w)}=${tnp(actual)}$.${right ? sign : unknown === undefined ? ` Not $${tnp(x)}$.` : ` Not $${tnp(result)}$.`}`,
               right ? 'good' : 'bad',
             );
             if (!right) {
@@ -138,6 +140,66 @@ function productRound(c: ProductCase, i: number, picture: DotPicture): Round {
     },
   };
 }
+function ruleRound(c: RuleCase, i: number, picture: DotPicture): Round {
+  return {
+    id: `rule-${i}`,
+    name: 'use a rule',
+    goal: c.goal,
+    start(base) {
+      const rc = { ...base, live: () => base.live() && picture.live };
+      const { p, d } = rc;
+      let busy = false,
+        done = false;
+      d.setHead(RULE);
+      if (c.pic) void picture.set(c.pic.v, c.pic.w);
+      else picture.blank();
+      const draw = async () => {
+        if (!c.pic) return;
+        await picture.shadow(c.pic.v, c.pic.w, { vLabel: c.pic.vLabel, wLabel: c.pic.wLabel || ' ' });
+      };
+      const row = eqRow({
+        d,
+        aria: 'the number',
+        left: c.left,
+        onCheck: async (x) => {
+          if (busy || done || !rc.live()) return;
+          busy = true;
+          row.enable(false);
+          d.msg('');
+          p.move();
+          try {
+            const right = exact(x, c.answer);
+            if (right) await draw();
+            if (!rc.live()) return;
+            d.msg(right ? c.done : `Not $${tnp(x)}$. ${c.hint}`, right ? 'good' : 'bad');
+            if (!right) {
+              rc.att.wrong++;
+              sfx.miss();
+              return;
+            }
+            done = true;
+            sfx.success();
+            rc.complete();
+          } finally {
+            busy = false;
+            if (rc.live()) row.enable(!done);
+          }
+        },
+      });
+      d.body.append(row.el);
+      focusSoon(p, row);
+      return {
+        hints: () => (done ? [] : [c.hint, c.done]),
+        async show() {
+          while (busy) await wait(20);
+          row.set(c.answer);
+          row.check();
+          while (busy) await wait(20);
+        },
+      };
+    },
+  };
+}
 function perpRound(c: PerpCase, i: number, picture: DotPicture): Round {
   const unknown = c.unknown;
   return {
@@ -166,7 +228,7 @@ function perpRound(c: PerpCase, i: number, picture: DotPicture): Round {
         d.msg('');
         p.move();
         try {
-          await picture.reveal(v, c.w);
+          await picture.shadow(v, c.w);
           if (!rc.live()) return;
           const good = meetsPerp(v, c),
             result = dot(v, c.w);
@@ -233,6 +295,7 @@ interface Step {
   tolerance?: number;
   calculation: string;
   hint: string;
+  setup?(): void;
   play?(x: number): Promise<void>;
 }
 function staged(rc: RoundCtx, steps: Step[], finish: () => void): RoundRun {
@@ -246,6 +309,7 @@ function staged(rc: RoundCtx, steps: Step[], finish: () => void): RoundRun {
   d.body.replaceChildren(title, slot);
   const mount = () => {
     const s = steps[at];
+    s.setup?.();
     title.innerHTML = inline(s.goal);
     slot.replaceChildren();
     d.msg('');
@@ -463,6 +527,77 @@ function derivation(
   });
   return staged({ p, d, view, att, live: () => live, complete: finish }, steps, finish);
 }
+/** Why multiply and add? The shadow, then a slanted w: each step along or up casts a fixed share of shadow. */
+function why(p: PuzzleCtx, d: PlainDock, view: PlaneView, picture: DotPicture, finish: () => void): RoundRun {
+  const v: Vec = [3, 2],
+    flat: Vec = [4, 0],
+    w: Vec = [4, 3];
+  d.kick.textContent = 'Why multiply and add?';
+  const steps: Step[] = [
+    {
+      setup: () => {
+        d.setHead(pair(v, flat));
+        void picture.shadow(v, flat);
+      },
+      goal: 'Light falls straight down onto $\\mathbf w$\'s line. How long is $\\mathbf v$\'s shadow?',
+      left: '\\text{shadow}=',
+      answer: 3,
+      calculation: '$3$, the x-part of $\\mathbf v$. Its $2$ going up is at a right angle to $\\mathbf w$: no shadow.',
+      hint: 'Count the grid squares under the yellow shadow.',
+    },
+    {
+      goal: 'The **dot product** is the shadow times the length of $\\mathbf w$.',
+      left: '\\mathbf v\\cdot\\mathbf w=3\\times4=',
+      answer: 12,
+      calculation: '$12=3\\times4+2\\times0$. $\\mathbf w$ has no y-part, so the y-parts give $0$.',
+      hint: 'Shadow $3$, length of $\\mathbf w$ is $4$.',
+    },
+    {
+      setup: () => {
+        d.setHead(pair(v, w));
+        void picture.set([0, 0], w).then(() => (picture.live ? view.legs(w) : undefined));
+      },
+      goal: 'Now $\\mathbf w$ slants. Its length first.',
+      left: '\\|\\mathbf w\\|=\\sqrt{4^2+3^2}=',
+      answer: 5,
+      calculation: '$\\sqrt{16+9}=5$.',
+      hint: 'Square both numbers, add, take the square root.',
+    },
+    {
+      setup: () => void picture.shadow([1, 0], w, { vLabel: '1 step along', label: ' ' }),
+      goal: 'One step along casts a shadow on $\\mathbf w$\'s line. Same angle as $\\mathbf w$\'s triangle: $4$ along for every $5$ of length.',
+      left: '\\text{shadow of 1 step along}=\\tfrac{4}{5}=',
+      answer: 0.8,
+      calculation: '$\\tfrac45=0.8$. In the same way, one step up casts $\\tfrac35=0.6$.',
+      hint: 'Divide $4$ by $5$.',
+    },
+    {
+      setup: () => void picture.legShadows(v, w, '$3\\times0.8$', '$2\\times0.6$'),
+      goal: '$\\mathbf v$ is $3$ steps along and $2$ steps up. Their shadows add.',
+      left: '\\text{shadow of }\\mathbf v=3\\times0.8+2\\times0.6=',
+      answer: 3.6,
+      tolerance: 1e-6,
+      calculation: '$2.4+1.2=3.6$.',
+      hint: 'Multiply, then add.',
+    },
+    {
+      setup: () => void picture.shadow(v, w, { label: '$3.6$' }),
+      goal: 'The dot product: shadow times $\\|\\mathbf w\\|$.',
+      left: '\\mathbf v\\cdot\\mathbf w=3.6\\times5=',
+      answer: 18,
+      tolerance: 1e-6,
+      calculation:
+        '$18=3\\times4+2\\times3$. Each step\'s shadow was divided by $5$; times $\\|\\mathbf w\\|=5$ undoes it. So $\\mathbf v\\cdot\\mathbf w=v_1w_1+v_2w_2$.',
+      hint: '$3.6\\times5$.',
+    },
+  ];
+  const att = { help: 0, wrong: 0 };
+  let live = true;
+  p.onDispose(() => {
+    live = false;
+  });
+  return staged({ p, d, view, att, live: () => live, complete: finish }, steps, finish);
+}
 function guided(
   p: PuzzleCtx,
   d: PlainDock,
@@ -526,19 +661,26 @@ function guided(
 export const p1: PuzzleDef = {
   id: 'c04-p1',
   title: 'The dot product',
-  goal: 'Multiply matching numbers, then add.',
+  goal: 'Why multiply matching numbers and add?',
   calm: true,
   hints: [],
   par: 14,
   setup(p) {
     const { view, d, picture } = scene(p);
-    return runDrill(p, {
-      key: 'c04-dot-v2',
+    return guided(
+      p,
       d,
       view,
-      rounds: PRODUCT_CASES.map((c, i) => productRound(c, i, picture)),
-      extra: (n) => productRound({ v: [(n % 7) - 3, (n % 5) + 1], w: [2 + (n % 3), -1 - (n % 4)] }, 10 + n, picture),
-    });
+      'c04-dot-v3',
+      PRACTICE.map((c, i) => ('kind' in c ? ruleRound(c, i, picture) : productRound(c, i, picture))),
+      (n) => productRound({ v: [(n % 7) - 3, (n % 5) + 1], w: [2 + (n % 3), -1 - (n % 4)] }, 10 + n, picture),
+      (start) =>
+        why(p, d, view, picture, () => {
+          const b = button('Start ten practice rounds', start, { cls: 'primary small' });
+          d.body.append(b);
+          focusSoon(p, b, 60);
+        }),
+    );
   },
 };
 export const p2: PuzzleDef = {

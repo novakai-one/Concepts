@@ -17,6 +17,7 @@ export class DotPicture {
   private between: AngleArc;
   private square: RightAngle;
   private dead = false;
+  private drops: FatLine[] = [];
   get live(): boolean {
     return !this.dead;
   }
@@ -46,6 +47,7 @@ export class DotPicture {
   async set(v: Vec, w: Vec, triangle = false): Promise<void> {
     if (this.dead) return;
     this.view.clear();
+    this.clearDrops();
     this.drop.setOpacity(0);
     this.square.show(false);
     this.arc.show(false);
@@ -74,6 +76,79 @@ export class DotPicture {
       this.between.set(p3(v), p3(w));
       this.between.show(true);
     }
+  }
+  /** An empty chart (a round with no picture, such as 3-D vectors). */
+  blank(): void {
+    if (this.dead) return;
+    this.view.clear();
+    this.clearDrops();
+    this.square.show(false);
+    this.arc.show(false);
+    this.between.show(false);
+  }
+  private clearDrops(): void {
+    for (const l of this.drops) l.dispose();
+    this.drops = [];
+  }
+  /** A dashed line from `a` that falls straight onto w's line at `b` (the light shines at a right angle to w). */
+  private async fall(a: Vec, b: Vec): Promise<void> {
+    const l = new FatLine(this.p.g.stage, [p3(a), p3(a)], { color: '#d6e2f2', width: 1.6, dashed: true, opacity: 0.8 });
+    this.p.add(l);
+    this.drops.push(l);
+    await animate(this.ms(550), (k) => {
+      if (!this.dead) l.setPoints([p3(a), p3([a[0] + k * (b[0] - a[0]), a[1] + k * (b[1] - a[1])])]);
+    }, ease.inOut);
+  }
+  /** Where a point's shadow lands on w's line. */
+  private foot(a: Vec, w: Vec): Vec {
+    const k = dot(a, w) / dot(w, w);
+    return [k * w[0], k * w[1]];
+  }
+  /**
+   * v's shadow on w's line: w's line, a light falling from v's tip at a right angle to it, and the shadow in
+   * yellow from the origin (it points backwards when the angle is over 90°, and is a dot when v·w = 0).
+   */
+  async shadow(v: Vec, w: Vec, o: { vLabel?: string; label?: string; wLabel?: string } = {}): Promise<void> {
+    await this.set(v, w);
+    if (this.dead) return;
+    if (o.vLabel) this.view.arrow('v').label(o.vLabel);
+    if (o.wLabel) this.view.arrow('w').label(o.wLabel);
+    const f = this.foot(v, w);
+    this.view.line(w, { kind: 'b' });
+    await this.view.frame([v, w, f], { ms: 200, min: 1.5 });
+    await this.fall(v, f);
+    if (this.dead) return;
+    if (norm(f) > 1e-9) {
+      await this.view.arrow('shadow', 'y').grow(f, { from: [0, 0], ms: this.ms(450) });
+      this.view.arrow('shadow', 'y').label(o.label ?? 'shadow');
+    } else this.view.mark([0, 0], o.label ?? 'no shadow', 'y', true);
+    const gap = difference(v, f);
+    if (norm(gap) > 1e-6) {
+      this.square.size = 14 / this.view.ppu;
+      this.square.set(p3(f), p3(w), p3(gap));
+      this.square.show(true);
+    }
+  }
+  /** v as steps along x then steps up, and the two shadows those legs cast on w's line, end to end. */
+  async legShadows(v: Vec, w: Vec, l1: string, l2: string): Promise<void> {
+    await this.set([0, 0], w);
+    if (this.dead) return;
+    const a: Vec = [v[0], 0];
+    const fa = this.foot(a, w), fv = this.foot(v, w);
+    this.view.line(w, { kind: 'b' });
+    await this.view.frame([v, w, fv], { ms: 200, min: 1.5 });
+    await this.view.arrow('along', 'g').grow(a, { from: [0, 0], ms: this.ms(400) });
+    this.view.arrow('along', 'g').label(`$${tnp(v[0])}$ along`);
+    await this.view.arrow('up', 'g').grow([0, v[1]], { from: a, ms: this.ms(400) });
+    this.view.arrow('up', 'g').label(`$${tnp(v[1])}$ up`);
+    await this.fall(a, fa);
+    if (this.dead) return;
+    await this.view.arrow('s1', 'y').grow(fa, { from: [0, 0], ms: this.ms(400) });
+    this.view.arrow('s1', 'y').label(l1);
+    await this.fall(v, fv);
+    if (this.dead) return;
+    await this.view.arrow('s2', 'c').grow([fv[0] - fa[0], fv[1] - fa[1]], { from: fa, ms: this.ms(400) });
+    this.view.arrow('s2', 'c').label(l2);
   }
   private ms(n: number): number {
     return this.p.g.headless ? 1 : this.p.g.settings.reduceMotion ? Math.min(n, 160) : n;
